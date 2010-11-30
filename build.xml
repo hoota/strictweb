@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<project name="Scrict-Web" default="make-jar" basedir=".">
+    <target name="make-jar">
+    	<jar destfile="strict-web.jar" basedir="src"></jar>
+	</target>
+</project>
