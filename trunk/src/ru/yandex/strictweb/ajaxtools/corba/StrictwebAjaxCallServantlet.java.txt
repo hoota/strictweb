@@ -1,0 +1,194 @@
+package ru.yandex.strictweb.ajaxtools.corba;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.apache.log4j.Logger;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import ru.yandex.common.framework.core.ServRequest;
+import ru.yandex.common.framework.core.ServResponse;
+import ru.yandex.common.framework.core.Servantlet;
+import ru.yandex.common.util.StringEscapeUtils;
+import ru.yandex.common.util.xml.XmlConvertable;
+import ru.yandex.market.security.SecManager;
+import ru.yandex.strictweb.ajaxtools.RePresentation;
+import ru.yandex.strictweb.ajaxtools.annotation.Arguments;
+import ru.yandex.strictweb.ajaxtools.presentation.JsonRefPresentation;
+import ru.yandex.strictweb.ajaxtools.presentation.Presentation;
+import ru.yandex.strictweb.scriptjava.base.ajax.AjaxRequestResult;
+
+/**
+this class is only for Yandex common framework
+*/
+public class StrictwebAjaxCallServantlet implements ApplicationContextAware, Servantlet<ServRequest, ServResponse> {
+	Logger log = Logger.getLogger(StrictwebAjaxCallServantlet.class);
+	Pattern hostPattern = Pattern.compile("host: (.*)", Pattern.CASE_INSENSITIVE);
+	
+	private ApplicationContext applicationContext;
+
+	public void setApplicationContext(final ApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
+	
+	private SecManager secManager;
+    
+    public void setSecManager(final SecManager secManager) {
+        this.secManager = secManager;
+    }
+    
+    private Servantlet<ServRequest, ServResponse> requestListener;
+	
+	public void setRequestListener(Servantlet<ServRequest, ServResponse> requestListener) {
+        this.requestListener = requestListener;
+    }
+
+    public void process(ServRequest req, ServResponse res) {
+		String beanId = req.getParam("bean");
+		String action = req.getParam("action");
+		
+		Presentation p = new JsonRefPresentation();
+
+		AjaxRequestResult ajaxResult = new AjaxRequestResult();
+		
+		try {
+		    if(requestListener != null) requestListener.process(req, res);
+		    
+			log.debug("Bean: " + beanId);
+			log.debug("Action: " + action);
+			
+			Object bean = applicationContext.getBean(beanId);
+
+			Method method = null;
+			
+			for(Method m : bean.getClass().getMethods()) if(m.getName().equals(action)) {
+				method = m;
+				break;
+			}
+			
+			if(method == null) throw new RuntimeException("Unknown method " + action);
+			
+			Arguments arguments = method.getAnnotation(Arguments.class);
+			
+			if(null == arguments) throw new RuntimeException("Method is not visible for ajax call");
+			
+			if(arguments.checkReferer()) {
+				String ref = req.getReferer();
+				if(ref == null) throw new RuntimeException("Invalid referer");
+				
+				ref = ref.replaceFirst("http://", "").replaceFirst("/.*$", "");
+				Matcher m = hostPattern.matcher(req.getHttpHeaders());
+				
+				if(!m.find() || !ref.equals(m.group(1))) {
+				    log.debug("Referer host: " + ref);
+				    log.debug("Request host: " + m.group(1));   
+				    throw new RuntimeException("Bad referer");
+				}
+			}
+			
+			// проверка прав javasec
+			if(arguments.roles().length > 0) {
+			    boolean canDo = false;
+			    for(String role: arguments.roles()) {
+			        canDo |= secManager.canDo(req.getName() + "::" + role, req);
+			    }
+			    if(!canDo) throw new RuntimeException("Эта операция доступна только для пользователей в группах: " + Arrays.toString(arguments.roles()));
+			}
+
+			Object result = null;
+			
+			if(method.getParameterTypes().length == 0) {
+				result = method.invoke(bean);
+			} else {
+				Object[] params = new Object[method.getParameterTypes().length];
+				Document doc = null;
+				try {
+					String xmlData = req.getParam("xml-data");
+					log.debug("xml-data: " + xmlData);
+					doc = newDocument(xmlData);
+				}catch(SAXException e) {
+					doc = null;
+				}
+				
+				RePresentation rep = new RePresentation(null);
+				
+				NodeList properties = doc.getFirstChild().getChildNodes();
+				log.debug("properties.getLength :: " + properties.getLength());
+				log.debug("params.length :: " + params.length);
+				for(int i = 0; i < properties.getLength() && i<params.length; i++) {
+					Node node = properties.item(i);
+					Class<?> parameterType = method.getParameterTypes()[i];
+					if(parameterType == ServRequest.class) {
+					    // вызов не-strictweb методов (может кто-то захочет звать это из обычного java-script
+					    params[i] = req;
+					} else {
+                        Type genericParameterType = method.getGenericParameterTypes()[i];
+                        params[i] = rep.getObject(node, parameterType, genericParameterType);
+					}
+					log.debug(i + " :: " + parameterType + " :: " + params[i]);
+				}
+				
+				try {
+					result = method.invoke(bean, params);
+				}catch(Throwable ee) {
+					throw ee.getCause() != null ? ee.getCause() : ee;
+				}
+			}
+			
+			ajaxResult.setData(result);
+
+		} catch(Throwable e) {
+			e.printStackTrace();
+			ajaxResult.setError(e);
+		}
+		
+		try {
+			String jsonResult = p.toString(ajaxResult);
+//			log.debug("JsonResult: " + jsonResult);
+			res.addData(new JsonTag("result", jsonResult));
+		} catch(Throwable e) {
+			e.printStackTrace();
+			ajaxResult.setData(null);
+			ajaxResult.setError(e);
+			try {
+				res.addData(new JsonTag("result", p.toString(ajaxResult)));
+			} catch(Throwable e1) {
+				res.addData(new JsonTag("error", e1.getMessage()));
+			}
+		}
+	}
+	
+	static DocumentBuilderFactory domFact = DocumentBuilderFactory.newInstance();
+	public static Document newDocument(String in) throws Exception {
+		org.xml.sax.InputSource inputSource = new org.xml.sax.InputSource();
+		inputSource.setCharacterStream(new java.io.StringReader(in));
+		return domFact.newDocumentBuilder().parse(inputSource);
+	}
+	
+	static class JsonTag implements XmlConvertable {
+		String tag;
+		String json;
+		
+		public JsonTag(String tag, String json) {
+			this.tag = tag;
+			this.json = json;
+		}
+
+		public void toXml(StringBuilder b) {
+			b.append('<').append(tag).append('>')
+				.append(StringEscapeUtils.escapeXml(json))
+				.append("</").append(tag).append('>');
+		}
+		
+	}
+}
