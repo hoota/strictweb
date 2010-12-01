@@ -11,12 +11,6 @@ public class JsonPresentation extends AbstractPresentation {
 		return js.toString(o);
 	}
 	
-	public static String present(Object o, int level) throws Exception {
-		JsonPresentation js = new JsonPresentation();
-		js.setLevel(level);
-		return js.toString(o);
-	}
-	
 	@Override
 	boolean hashBegin(String key, Object x) {
 		if(key == null) buf.append("{");

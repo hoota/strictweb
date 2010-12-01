@@ -2,9 +2,8 @@ package ru.yandex.strictweb.scriptjava.base.ajax;
 
 import ru.yandex.strictweb.ajaxtools.annotation.AjaxTransient;
 import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
-import ru.yandex.strictweb.ajaxtools.exception.AjaxException;
 
-@Presentable(level=Integer.MAX_VALUE)
+@Presentable
 public class AjaxRequestResult {
 	@AjaxTransient
 	public static final Object NO_DATA = new Object();

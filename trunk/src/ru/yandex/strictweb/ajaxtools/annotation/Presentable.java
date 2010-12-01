@@ -12,9 +12,7 @@ import ru.yandex.strictweb.ajaxtools.presentation.DateTimeFormat;
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Inherited
 public @interface Presentable {
-	int level() default 0;
-	int incLevel() default 0;
-	int setLevel() default Integer.MAX_VALUE;
 	DateTimeFormat dateFormat() default DateTimeFormat.UNDEF;
 	boolean skipIncoming() default false;
+	int fractionDigits() default 6;
 }

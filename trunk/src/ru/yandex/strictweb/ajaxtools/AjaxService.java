@@ -36,6 +36,10 @@ import ru.yandex.strictweb.scriptjava.base.ajax.AjaxRequestResult;
 public class AjaxService extends HttpServlet {
     private static final long serialVersionUID = 1755139421903673627L;
     
+    private static final String HEADER_PRAGMA = "Pragma";
+    private static final String HEADER_EXPIRES = "Expires";
+    private static final String HEADER_CACHE_CONTROL = "Cache-Control";
+    
     ORMManagerProvider ormManagerProvider;
     
 	public void setOrmManagerProvider(ORMManagerProvider ormManagerProvider) {
@@ -73,9 +77,6 @@ public class AjaxService extends HttpServlet {
 			p = new JsonRefPresentation();
 		}
 		
-		int level = request.getParameter("level")!=null ? Integer.parseInt(request.getParameter("level")) : 0;
-		if(p.getLevel() < level) p.setLevel(level);
-		
 		return p;
 	}
 	
@@ -109,10 +110,21 @@ public class AjaxService extends HttpServlet {
 		return params;
 	}
 	
-	@Override
+    protected final void preventCaching(HttpServletResponse response) {
+        response.setHeader(HEADER_PRAGMA, "no-cache");
+        // HTTP 1.0 header
+        response.setDateHeader(HEADER_EXPIRES, 1L);
+        // HTTP 1.1 header: "no-cache" is the standard value,
+        // "no-store" is necessary to prevent caching on FireFox.
+        response.setHeader(HEADER_CACHE_CONTROL, "no-cache");
+        response.addHeader(HEADER_CACHE_CONTROL, "no-store");
+    }
+    
+    @Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 	throws ServletException, IOException {
-		
+    	preventCaching(response);
+    	
 		ORMManager orm = ormManagerProvider != null ? ormManagerProvider.getORMManager() : null;
 		
 		try {
@@ -160,8 +172,8 @@ public class AjaxService extends HttpServlet {
 
 
 	protected void doAction(RePresentation.EntityFinder ef, HttpServletRequest request, AjaxRequestResult result) throws Throwable {
-		String beanName = request.getParameter("bean");
-		String methodName = request.getParameter("action");
+		String beanName = request.getParameter(Ajax.BEAN_NAME_PARAM);
+		String methodName = request.getParameter(Ajax.METHOD_NAME_PARAM);
 		
 		Object bean = beanProvider == null ? Class.forName(beanName).newInstance() : beanProvider.getBeanInstance(beanName);
 		

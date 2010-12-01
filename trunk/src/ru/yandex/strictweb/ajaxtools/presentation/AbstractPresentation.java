@@ -10,14 +10,17 @@ import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo.Property;
 
 public abstract class AbstractPresentation implements Presentation {
 	
-	static NumberFormat numberFormat = NumberFormat.getInstance(java.util.Locale.US);
+	static NumberFormat[] numberFormats = new NumberFormat[20];
 
 	static {
-		numberFormat.setGroupingUsed(false);
-		numberFormat.setMaximumFractionDigits(6);
+		for(int i=0; i<numberFormats.length; i++) {
+			numberFormats[i] = NumberFormat.getInstance(java.util.Locale.US);
+			numberFormats[i].setGroupingUsed(false);
+			numberFormats[i].setMaximumFractionDigits(i);
+		}
 	}
 	
-	int level = 0;
+	NumberFormat numberFormat;
 	boolean forceEnumsAsClasses = false;
 	DateTimeFormat dateFormat = DateTimeFormat.DATE;
 	StringBuilder buf;
@@ -26,34 +29,23 @@ public abstract class AbstractPresentation implements Presentation {
 
 		List<Property> properties = ClassMethodsInfo.getPresentableProperties(o.getClass());
 		
-		for(Property prop : properties) if(prop.level >= level) {
+		for(Property prop : properties) {
 			if(!first) addSeparator();
-			int levelSave = level;
 			DateTimeFormat dFormat = dateFormat;
-			
-			level += prop.incLevel;
-			
-			if(prop.setLevel != Integer.MAX_VALUE) {
-				level = prop.setLevel;
-			}
 			
 			if(prop.dateFormat != DateTimeFormat.UNDEF) {
 				dateFormat = prop.dateFormat;
 			}
+			numberFormat = numberFormats[prop.fractionDigits];
 			presentOne(
 				prop.getName(), 
 				prop.getObject(o),
 				false
 			);
 			dateFormat = dFormat;
-			level = levelSave;
 			first = false;
 		}
 		return first;
-	}
-	
-	public void setLevel(int level) {
-		this.level = level;
 	}
 	
 	/* (non-Javadoc)
@@ -139,10 +131,6 @@ public abstract class AbstractPresentation implements Presentation {
 	abstract void presentString(String key, String val, boolean forceItem);
 	abstract void presentNull(String key, boolean forceItem);
 	abstract void presentNumber(String key, String val, boolean forceItem);
-
-	public int getLevel() {
-		return level;
-	}
 
 	public DateTimeFormat getDateFormat() {
 		return dateFormat;
