@@ -1,15 +1,21 @@
 package ru.yandex.strictweb.scriptjava.compiler;
 
-import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -26,6 +32,7 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import javax.tools.Diagnostic.Kind;
@@ -84,7 +91,7 @@ public class Parser implements CompilerPlugin {
 	private boolean parsingParameters;
 	private boolean inlineStatement;
 	private String superInvocation;
-	private List<File> filesToParse = new ArrayList<File>();
+	private List<String> filesToParse = new ArrayList<String>();
 	public Map<String, Set<String>> classLabels = new HashMap<String, Set<String>>();
 	private List<String> currentImports;
 	private Set<String> ignoredClasses = new HashSet<String>();
@@ -458,10 +465,41 @@ public class Parser implements CompilerPlugin {
         throw new RuntimeException();
     }
 
-	public void parseFile(File f){
+	public void parseFile(String f){
 //		System.out.println(f);
 
 		filesToParse.add(f);
+	}
+	
+	static class MyFileObject extends SimpleJavaFileObject {
+		SoftReference<StringBuilder> content = null;
+		
+		protected MyFileObject(URI uri, javax.tools.JavaFileObject.Kind kind) {
+			super(uri, kind);
+		}
+		
+		@Override
+		public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+			if(content==null || content.get() == null) {
+				StringBuilder builder = new StringBuilder();
+				content = new SoftReference<StringBuilder>(builder);
+				Reader r = null;
+				try {
+					if("classpath".equals(uri.getScheme())) {
+						r = new InputStreamReader(this.getClass().getResourceAsStream(uri.getPath()));
+					} else {
+						r = new FileReader(uri.getPath());
+					}
+					char[] cbuf = new char[4096];
+					int len = 0;
+					while((len=r.read(cbuf)) > 0) builder.append(cbuf, 0, len);
+				}finally {
+					if(r!=null) r.close();
+				}
+			}
+			
+			return content.get();
+		}
 	}
 	
 	void parseAllFiles() throws Exception {
@@ -469,11 +507,13 @@ public class Parser implements CompilerPlugin {
 		compiler = ToolProvider.getSystemJavaCompiler();
 		
 		StandardJavaFileManager fileManager = compiler.getStandardFileManager(
-			null, null, Charset.forName("utf8"));
+			null, Locale.getDefault(), Charset.forName("utf8"));
 
-		Iterable<? extends JavaFileObject> compilationUnits1 = fileManager
-			.getJavaFileObjectsFromFiles(filesToParse);
-
+		List<JavaFileObject> units = new ArrayList<JavaFileObject>();
+		for(String f: filesToParse) {
+			units.add(new MyFileObject(new URI(f), javax.tools.JavaFileObject.Kind.SOURCE));
+		}
+		
 		JavacTaskImpl task = (JavacTaskImpl)compiler.getTask(null, fileManager,
 			new DiagnosticListener<JavaFileObject>() {
 				@Override
@@ -485,7 +525,7 @@ public class Parser implements CompilerPlugin {
 					}
 				}
 			},
-			null, null, compilationUnits1);
+			null, null, units);
 
 		for(Tree t : task.parse()) {
 			currentImports = new ArrayList<String>();

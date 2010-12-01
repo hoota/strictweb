@@ -25,6 +25,8 @@ public class Ajax {
 	private static final String MICROSOFT_XMLHTTP = "Microsoft.XMLHTTP";
 	private static final String EV_ONREADYSTATECHANGE = "onreadystatechange";
 	public static String XML_DATA_PARAM = "xml-data";
+	public static String BEAN_NAME_PARAM = "bean";
+	public static String METHOD_NAME_PARAM = "action";
 	public static String DEFAULT_LOADING_IMG = null;
 
 	public static AjaxUrlFormer defaultUrlFormer = new AjaxUrlFormer() {
@@ -32,7 +34,9 @@ public class Ajax {
 			return "/ajax";
 		}
 		public String getQueryString(String clazz, String method) {
-			return "_rnd="+Math.random()+"&bean="+clazz+"&action="+method;
+			return "_rnd="+Math.random()
+				+"&"+BEAN_NAME_PARAM+"="+clazz
+				+"&"+METHOD_NAME_PARAM+"="+method;
 		}
 	};
 	

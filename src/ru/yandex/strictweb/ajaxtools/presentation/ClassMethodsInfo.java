@@ -32,19 +32,18 @@ public class ClassMethodsInfo {
 	public abstract static class Property {
 		final Class<?> clazz;
 		AnnotatedElement ael;
-		final int level;
-		final int setLevel;
-		final int incLevel;
 		final DateTimeFormat dateFormat;
+		final int fractionDigits;
 		
 		public Property(Class<?> clazz, AnnotatedElement ael, Property cli, Presentable pr) {
 			this.clazz = clazz;
 			this.ael = ael;
 			
-			this.level      = ael!=null && ael.isAnnotationPresent(Id.class) ? Integer.MAX_VALUE: 
-				(pr!=null ? pr.level()      : (cli!=null ? cli.level      : 0));
-			this.incLevel   = pr!=null ? pr.incLevel()   : (cli!=null ? cli.incLevel   : 0);
-			this.setLevel   = pr!=null ? pr.setLevel()   : (cli!=null ? cli.setLevel   : Integer.MAX_VALUE);
+			int fd = pr!=null ? pr.fractionDigits() : 6;
+			if(fd<0) fd = 0;
+			if(fd>19) fd = 19;
+			this.fractionDigits = fd;
+			
 			this.dateFormat = pr!=null ? pr.dateFormat() : (cli!=null ? cli.dateFormat : DateTimeFormat.UNDEF);			
 		}
 		

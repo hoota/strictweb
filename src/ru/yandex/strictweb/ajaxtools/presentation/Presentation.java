@@ -9,7 +9,4 @@ public interface Presentation {
 
 	public void forceEnumsAsClasses(boolean forceEnumsAsClasses);
 	public boolean isEnumsAsClasses();
-	
-	int getLevel();
-	void setLevel(int level);
 }

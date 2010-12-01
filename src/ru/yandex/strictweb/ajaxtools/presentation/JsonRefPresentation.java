@@ -1,5 +1,6 @@
 package ru.yandex.strictweb.ajaxtools.presentation;
 
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -24,6 +25,8 @@ public class JsonRefPresentation implements Presentation {
 	Map<Object, Integer> references = new IdentityHashMap<Object, Integer>();
 	
 	LinkedList<Integer> stack = new LinkedList<Integer>();
+	
+	NumberFormat numberFormat;
 	
 	private int currentIndex;
 	private StringBuilder buf;
@@ -74,6 +77,8 @@ public class JsonRefPresentation implements Presentation {
 				dateFormat = prop.dateFormat;
 			}
 			
+			numberFormat = AbstractPresentation.numberFormats[prop.fractionDigits];
+			
 			presentOne(
 				prop.getName(), 
 				prop.getObject(o),
@@ -100,7 +105,7 @@ public class JsonRefPresentation implements Presentation {
                 if(f.isInfinite()) {presentNumber(key, (f<0?"-":"") + "Infinite"); return true;}
             }
 	        
-			presentNumber(key, AbstractPresentation.numberFormat.format(o));
+			presentNumber(key, numberFormat.format(o));
 			return true;
 		} else if(o instanceof String) {
 			presentString(key, o.toString());
@@ -286,11 +291,4 @@ public class JsonRefPresentation implements Presentation {
 			index /= digits.length;
 		} while(index > 0);
 	}
-
-    public int getLevel() {
-        return 0;
-    }
-
-    public void setLevel(int level) {
-    }
 }

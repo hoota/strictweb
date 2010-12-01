@@ -4,7 +4,7 @@ import java.util.List;
 
 import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
 
-@Presentable(level=Integer.MAX_VALUE)
+@Presentable
 public class AjaxListResultSet<E> {
 	List<E> list;
 	long count;

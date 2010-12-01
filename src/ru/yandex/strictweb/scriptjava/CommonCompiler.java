@@ -12,7 +12,7 @@ import ru.yandex.strictweb.ajaxtools.annotation.Arguments;
 public class CommonCompiler {
 	int debugLevel = 0;
 	boolean obfuscate = false;
-	String basePath = "";
+	String basePath = "classpath:/";
 	String jsGenPath = "generated.js";
 	List<String> ignoredClasses = new ArrayList<String>();
 	
