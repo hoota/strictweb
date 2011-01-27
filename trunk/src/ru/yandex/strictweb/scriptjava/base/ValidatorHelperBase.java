@@ -4,7 +4,7 @@ import ru.yandex.strictweb.scriptjava.base.util.TimeoutIdentifier;
 
 
 public class ValidatorHelperBase extends CommonElements {
-	public static final String msgClassName = "invalideFieldMessage";
+	public static final String msgClassName = "invalidFieldMessage";
 	
 	public boolean validate(DOMBuilder root) {
 		try {

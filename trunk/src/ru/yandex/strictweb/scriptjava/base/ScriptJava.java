@@ -25,6 +25,11 @@ public class ScriptJava extends JSObject {
 		console = getConsole();
 	}
 	
+	public static final VoidDelegate NOP = new VoidDelegate<Object>() {
+        public void voidDelegate(Object arg) {
+        }
+    };
+	
 	@NativeCode("{var f = new Function(code); return f();}" +
 		";String.prototype.trim = function() {" +
 		"return this.replace(/^\\s+/, '').replace(/\\s+$/, '');" +

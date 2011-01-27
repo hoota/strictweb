@@ -68,14 +68,14 @@ public class Ajax {
 	public static Object syncCall(String clazz, final String method, Object args, final VoidDelegate<Object> callBack, final VoidDelegate<Throwable> errorHandler) throws Throwable {
 		defaultErrorHandler.voidDelegate(null);
 		boolean async = callBack != null;
-		Log.info("<b>DOING ASYNC CALL</b>");
+		Log.info("DOING ASYNC CALL");
 //		validate(args, validator);
 		
 		final XMLHttpRequest request = getHttpRequest();
 		
 //		if(null == urlFormer) urlFormer = defaultUrlFormer;
 		final String url = defaultUrlFormer.getUrl(clazz, method);
-		Log.debug("<br><b>Request:</b> " + url);
+		Log.debug("Request: " + url);
 		
 //		String postXml = args==null ? null : ("<request>" + objectToXml(args, null) + "</request>");		
 		String postXml = args==null ? null : (objectToXml(args, null));	
@@ -100,7 +100,7 @@ public class Ajax {
 			request.send(null);
 		} else {
 			postXml = defaultUrlFormer.getQueryString(clazz, method) + "&"+XML_DATA_PARAM+"=" + postXml.replaceAll("%", "%25").replaceAll("&", "%26").replaceAll(";", "%3B").replaceAll("\\+", "%2B");
-			Log.debug(postXml.replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
+			Log.debug(postXml);
 			request.open("POST", url, async, null, null);
 //			request.setRequestHeader("Connection", "close");
 			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -180,7 +180,9 @@ public class Ajax {
 		// loading
 		eventTargetNodes[2] = (
 			null != DEFAULT_LOADING_IMG ? 
-				ScriptJava.EL("span").add(ScriptJava.EL("img").src(DEFAULT_LOADING_IMG)) 
+				ScriptJava.EL("span").styleDisplay("inline-block")
+				    .styleWidth(el.offsetWidth+"px").styleHeight(el.offsetHeight+"px")
+				    .styleBackground("center center no-repeat url(" + Ajax.DEFAULT_LOADING_IMG + ")")
 				: ScriptJava.EL("span").text("loading...")
 			).node;
 		
@@ -230,9 +232,10 @@ public class Ajax {
 			if(ScriptJava.isInstanceOfDate(obj)) return "<d"+id+">"+ScriptJava.dateToStringSmart((Date)obj)+"</d>"; 
 			if(ScriptJava.isInstanceOfArray(obj)) return arrayToXml((Object[])obj, id); 
 			if(ScriptJava.isInstanceOfNode(obj)) {
-				return (_id!=null?"<form"+id+">":"")
-					+ formToXml((Node)obj)
-					+ (_id!=null?"</form>":"");
+//				return (_id!=null?"<form"+id+">":"")
+//					+ formToXml((Node)obj)
+//					+ (_id!=null?"</form>":"");
+                return "<form"+id+">" + formToXml((Node)obj) + "</form>";
 			}
 			Map<String, String> map = (Map<String, String>) obj;
 			String xml = "<o"+id+">";

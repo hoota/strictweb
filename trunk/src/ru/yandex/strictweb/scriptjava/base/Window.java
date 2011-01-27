@@ -42,6 +42,7 @@ public abstract class Window {
 	abstract public void scroll(int x, int y);
 	abstract public void close();
 	abstract public boolean confirm(String message);
+    abstract public <K> K prompt(String message, String defValue);
 	abstract public void focus();
 	abstract public void clearInterval(IntervalIdentifier intervalId);
 	abstract public void clearTimeout(TimeoutIdentifier timeoutId);

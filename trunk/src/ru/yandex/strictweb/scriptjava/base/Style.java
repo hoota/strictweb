@@ -2,6 +2,7 @@ package ru.yandex.strictweb.scriptjava.base;
 
 @Native
 public class Style {
+    public String cssText;
 	public String display;
 	public Object top;
 	public Object left;
@@ -35,6 +36,9 @@ public class Style {
 	public String position;
 	
 	// CSS3
+	public double opacity;
+	/** IE only */
+	public String filter;
 	public String boxShadow;
 	public String MozBoxShadow;
 	public String webkitBoxShadow;
@@ -50,4 +54,5 @@ public class Style {
 	public String transformOrigin;
 	public String webkitTransformOrigin;
 	public String MozTransformOrigin;
+    public String cursor;
 }
