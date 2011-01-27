@@ -33,6 +33,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	}
 	
 	final public S onClick(DOMEventCallback callback) {
+        node.style.cursor = "pointer";
 		ScriptJava.setDOMEventCallback(node, EV_ONCLICK, callback);
 		return (S)this;
 	}
@@ -136,7 +137,27 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		node.style.display = d;
 		return (S)this;
 	}
+	
+	public S cssText(String cssText) {
+	    node.style.cssText = cssText;
+        return (S)this;
+	}
+	
+    public S cursor(String cursor) {
+        node.style.cursor = cursor;
+        return (S)this;
+    }
+    
+    public S cursorPointer() {
+        node.style.cursor = "pointer";
+        return (S)this;
+    }
 
+    public S position(String position) {
+        node.style.position = position;
+        return (S)this;
+    }
+    
 	public S add(DOMBuilder<? extends C, ? extends Node, ?> b) {
 		if(null!=b) append(b.node);
 		return (S)this;
@@ -175,8 +196,8 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	}
 
 	
-	public void toggle() {
-		node.style.display = node.style.display=="" ? "none" : "";
+	public String toggle() {
+		return (node.style.display = node.style.display=="" ? "none" : "");
 	}
 
 	public S type(String type) {
@@ -307,11 +328,16 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		return (S)this;
 	}
 
-	public Integer valueAsNum() {
-		if(null==node.value || node.value=="") return null;
-		return 1*(Integer)node.value;
+	public Integer valueAsInt() {
+		if(node.value==null || node.value=="") return null;
+		return 1 * (Integer)node.value;
 	}
-
+	
+    public Long valueAsLong() {
+        if(node.value==null || node.value=="") return null;
+        return 1 * (Long)node.value;
+    }
+    
 	public boolean isChecked() {
 		return node.checked;
 	}
@@ -424,6 +450,12 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	@NativeCode("{this.%node%.style[key] = value; return this;}")
 	public S style(String key, Object value) {
 		return (S)this;
+	}
+	
+	public S styleOpacity(double o) {
+	    node.style.opacity = o;
+	    node.style.filter = "alpha(opacity="+Math.round(o*100)+")";
+	    return (S)this;
 	}
 	
 	public S styleHeight(Object h) {

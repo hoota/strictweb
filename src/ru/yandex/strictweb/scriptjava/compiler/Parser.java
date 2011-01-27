@@ -37,14 +37,6 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import javax.tools.Diagnostic.Kind;
 
-import ru.yandex.strictweb.ajaxtools.annotation.AjaxTransient;
-import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
-import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo;
-import ru.yandex.strictweb.scriptjava.base.ExtendsNative;
-import ru.yandex.strictweb.scriptjava.base.Native;
-import ru.yandex.strictweb.scriptjava.base.NativeCode;
-import ru.yandex.strictweb.scriptjava.plugins.EntityCompilerPlugin;
-
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.code.Flags;
@@ -63,6 +55,14 @@ import com.sun.tools.javac.tree.JCTree.JCModifiers;
 import com.sun.tools.javac.tree.JCTree.JCNewClass;
 import com.sun.tools.javac.tree.JCTree.JCTypeParameter;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
+
+import ru.yandex.strictweb.ajaxtools.annotation.AjaxTransient;
+import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
+import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo;
+import ru.yandex.strictweb.scriptjava.base.ExtendsNative;
+import ru.yandex.strictweb.scriptjava.base.Native;
+import ru.yandex.strictweb.scriptjava.base.NativeCode;
+import ru.yandex.strictweb.scriptjava.plugins.EntityCompilerPlugin;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_5)
 @SupportedAnnotationTypes("*")
@@ -652,6 +652,7 @@ public class Parser implements CompilerPlugin {
 		ParsedClass cl = getParsedClassByName(typeName);
 		
 		if(null == cl) {
+//		    System.out.println("Unknown method: " + typeName+"."+n);
 			throw new NoSuchMethodException("Unknown method: " + typeName+"."+n);
 		}
 		
@@ -677,6 +678,7 @@ public class Parser implements CompilerPlugin {
 	
 	private ParsedClass tryParseBean(Class<?> claz) {
 		if(!ClassMethodsInfo.isPojoBean(claz)) {
+//		    System.out.println(claz.getName() + " IS NOT POJO!!");
 			return null;
 		}
 
@@ -684,6 +686,7 @@ public class Parser implements CompilerPlugin {
 		addClassLabel(claz, EntityCompilerPlugin.LABEL);
 		
 		cl.canCreateNewInstance = false;
+		cl.skipInnerObfuscation = true;
 		classes.put(cl.name, cl);
 
 		for(Method m : claz.getMethods()) 
@@ -693,8 +696,12 @@ public class Parser implements CompilerPlugin {
 				&& (!m.isAnnotationPresent(Transient.class) || m.isAnnotationPresent(Presentable.class))) {
 
 			ParsedMethod pm = new ParsedMethod(m.getName(), null, cl);
-			pm.retType = new VarType(m.getGenericReturnType());
-			cl.methods.put(pm.name, pm);				
+			try {
+			    pm.retType = new VarType(m.getGenericReturnType());
+			    cl.methods.put(pm.name, pm);
+			}catch(Throwable th) {
+		        System.err.println("Warning: " + th.getMessage());
+			}
 		}
 
 		for(Field f : claz.getFields()) 
@@ -758,6 +765,7 @@ public class Parser implements CompilerPlugin {
 		
 		for(int i=0; i<classesList.size(); i++) {
 			ParsedClass cl = classesList.get(i);
+			currentImports = cl.importList;
 			if(cl.compiled) continue;
 			cl.compiled = true;
 			localVars.clear();
@@ -817,12 +825,12 @@ public class Parser implements CompilerPlugin {
 	public boolean invokeMethod(String mName, JCMethodInvocation inv, List arguments) {
 
 		try {
-//				System.out.println(mName);
+//		    System.out.println(currentType.getName() + " :: " + mName);
+		    
 			VarType retType = getMethodType(currentType, mName);
 			ParsedClass cl = classes.get(currentType.getName());
 			
-		     if(checkForAjaxNameMagicMethod(mName, cl, code, arguments)) return true;
-
+			if(checkForAjaxNameMagicMethod(mName, cl, code, arguments)) return true;
 			
 			if(null!=cl && cl.isEnum) {
 				if(mName.startsWith("get") || mName.startsWith("is")) {
@@ -1220,7 +1228,7 @@ public class Parser implements CompilerPlugin {
 		if(debugLevel > 0) indentPrefix += "\t";
 		code.append(ifObfuscated("{", " {"+indentPrefix));
 		if(anonymousTester.test(block)) {
-			code.append("var "+(currentClass.lastElement().selfPrefix = "self" + currentClass.size())+" = this;"+ifObfuscated("", "\n"+indentPrefix));
+			code.append("var "+(currentClass.lastElement().selfPrefix = "self" + currentClass.size())+ifObfuscated("=this;", " = this;\n"+indentPrefix));
 		} else currentClass.lastElement().selfPrefix = "this";
 		
 		if(params.size()>0) {
@@ -1324,7 +1332,7 @@ public class Parser implements CompilerPlugin {
 			
 			String fName = f.getName().toString();
 //			if("name".equals(fName)) fName = "__name";
-			code.append(cl.selfPrefix + getObfuscatedName(fName) + " = ");
+			code.append(cl.selfPrefix + getObfuscatedName(fName) + (obfuscate ? "=" : " = "));
 			parse(f.getInitializer());
 			code.append(";\n");
 		}
@@ -1350,7 +1358,7 @@ public class Parser implements CompilerPlugin {
 			//cl.selfPrefix = "this";
 			
 			parse(f.getName());
-			code.append(" = ");
+			code.append(obfuscate ? "=" : " = ");
 			parse(f.getInitializer());
 			code.append(";\n");
 		}
@@ -1463,7 +1471,7 @@ public class Parser implements CompilerPlugin {
 			code.append(getObfuscatedName(n));
 		} else {
 			code.append("var " + getObfuscatedName(n));
-			code.append(" = ");
+			code.append(obfuscate ? "=" : " = ");
 			parse(node.getInitializer());
 			code.append(";"+indentPrefix);
 			currentType = null;
@@ -1596,6 +1604,8 @@ public class Parser implements CompilerPlugin {
 				if(!classes.containsKey(n)) throwCompileError(node, "Unknown static something: " + n);
 				currentType = (cl=classes.get(n)).varType;
 			}
+			
+//			System.out.println(cl.name +"::"+n + "  ---  " + (cl.isNative || cl.skipInnerObfuscation));
 			
 			code.append(getObfuscatedName(n, cl.isNative || cl.skipInnerObfuscation));		
 		} else {
@@ -1830,13 +1840,21 @@ public class Parser implements CompilerPlugin {
 		if(null == currentType) throw new RuntimeException("Unknown type in declaration: " + node);
 		if(debugLevel>1) code.append("/*"+currentType.getName()+"*/");
 		
-		ParsedClass cl = classes.get(currentType.getName());
+		ParsedClass cl = null;
+        try {
+            cl = getParsedClassByName(currentType.getName());
+        } catch (NoSuchMethodException e) {
+        }
+//		getClassSafe(currentType.getName())
 		
 //		if("name".equals(n) && cl!=null && cl.staticFields.contains(n)) {
 //			code.append(".__name");
 //		} else {
 //			code.append("." + n);
 //		}
+        
+//		System.out.println(currentType.getName() +"::"+n + "  ===>  " + (cl!=null && (cl.isNative || cl.skipInnerObfuscation)));
+        
 		code.append("." + getObfuscatedName(n,  currentType.isArray() || (cl!=null && (cl.isNative || cl.skipInnerObfuscation))));
 		currentType = getFieldType(currentType, n);				
 	}

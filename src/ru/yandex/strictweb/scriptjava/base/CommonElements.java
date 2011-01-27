@@ -91,7 +91,7 @@ public class CommonElements extends ScriptJava {
 	}
 	
 	public static final NoChildNodeBuilder $IMG(String src) {
-		return new NoChildNodeBuilder("img").src(src);
+		return new NoChildNodeBuilder("img").src(src==null?"about:blank":src);
 	}
 	
 	public static final NodeBuilder $BTN(String title, DOMEventCallback cb) {
