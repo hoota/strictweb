@@ -4,16 +4,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import ru.yandex.strictweb.scriptjava.compiler.CompilerPlugin;
-import ru.yandex.strictweb.scriptjava.compiler.ParsedClass;
-import ru.yandex.strictweb.scriptjava.compiler.Parser;
-import ru.yandex.strictweb.scriptjava.compiler.VarType;
-
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
+
+import ru.yandex.strictweb.scriptjava.compiler.CompilerPlugin;
+import ru.yandex.strictweb.scriptjava.compiler.IgnoreExtends;
+import ru.yandex.strictweb.scriptjava.compiler.ParsedClass;
+import ru.yandex.strictweb.scriptjava.compiler.Parser;
+import ru.yandex.strictweb.scriptjava.compiler.VarType;
 
 public class EntityCompilerPlugin implements CompilerPlugin {
 	public static String LABEL = "ENTITY";
@@ -117,7 +118,7 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 		
 		if(null!=cl.type.getExtendsClause()) {
 			String superType = cl.type.getExtendsClause().toString();			
-			if(!parser.classes.get(superType).isNative) {
+			if(!parser.hasAnnotation(IgnoreExtends.class.getSimpleName(), cl.type.getModifiers()) && !parser.classes.get(superType).isNative) {
 				parser.code.append(parser.getObfuscatedName("ScriptJava")+"."+parser.getObfuscatedName("extend") + "("+cl.name+".prototype, "+superType+".prototype)\n");
 			}
 		}		

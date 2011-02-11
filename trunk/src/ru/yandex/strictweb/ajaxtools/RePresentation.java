@@ -2,6 +2,7 @@ package ru.yandex.strictweb.ajaxtools;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -40,19 +41,21 @@ public class RePresentation {
 	 * Пробел разделяет время от даты. Многие значения можно опускать
 	 * @return
 	 */
-	public static Date parseDate(String in) {
-		if(in == null || in.isEmpty()) return null;
+	public static long parseDate(String in) {
+		if(in == null || in.isEmpty()) return -1;
 
-		Date now = new Date();
-		
 		String dateTime[] = in.replaceAll("\\s+", " ").trim().split(" ");
 		String date[] = dateTime[0].split("[^0-9]");
 		String time[] = dateTime.length > 1 ? dateTime[1].split("[^0-9]") : null;
 		
 		Calendar c = Calendar.getInstance();
-		c.setTime(now);
+		
 		if(date.length == 3) {
-			c.set(Integer.parseInt(date[2]), Integer.parseInt(date[1])-1, Integer.parseInt(date[0]));
+		    if(date[2].length() == 4) {
+		        c.set(Integer.parseInt(date[2]), Integer.parseInt(date[1])-1, Integer.parseInt(date[0]));
+		    } else {
+		        c.set(Integer.parseInt(date[0]), Integer.parseInt(date[1])-1, Integer.parseInt(date[2]));
+		    }
 		}
 
 		c.set(Calendar.HOUR_OF_DAY, time!=null && time.length > 0 ? Integer.parseInt(time[0]) : 0);
@@ -60,7 +63,7 @@ public class RePresentation {
 		c.set(Calendar.SECOND, time!=null && time.length > 2 ? Integer.parseInt(time[2]) : 0);
 		c.set(Calendar.MILLISECOND, 0);
 		
-		return c.getTime();		
+		return c.getTimeInMillis();		
 	}
 	
 	public static Object getObjectSimple(String value, Class clazz) {
@@ -82,12 +85,22 @@ public class RePresentation {
 			} catch (RuntimeException e) {
 				throw new RePresentationException("Invalid double: " + value);
 			}
+        } else if(clazz.equals(Byte.class) || clazz.equals(byte.class)) {
+            try {
+                return Byte.parseByte(value);
+            } catch (RuntimeException e) {
+                throw new RePresentationException("Invalid byte: " + value);
+            }
 		} else if(clazz.equals(String.class)) {
 			return value;
 		} else if(clazz.isEnum()) {
 			return Enum.valueOf(clazz, value);		
-		} else if(clazz.equals(Date.class)) {
-			return parseDate(value);
+		} else if(clazz.equals(Timestamp.class)) {
+			long ts = parseDate(value);
+            return ts==-1 ? null : new Timestamp(ts);
+        } else if(clazz.equals(Date.class)) {
+            long ts = parseDate(value);
+            return ts==-1 ? null : new Date(ts);
 		} else if(clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
 			return (boolean)(null!=value && value.equals("1"));
 		}

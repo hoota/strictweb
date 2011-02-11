@@ -13,6 +13,7 @@ import ru.yandex.strictweb.scriptjava.base.util.TimeoutIdentifier;
 
 public class ScriptJava extends JSObject {
 	public static DOMEvent globalEvent;
+	/** Куда можно подсунуть strict-web event target */
 	public static Node swTarget;
 	
 	public final static Window window;

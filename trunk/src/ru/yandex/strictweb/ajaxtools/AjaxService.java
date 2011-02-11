@@ -8,9 +8,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Id;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -140,6 +142,7 @@ public class AjaxService extends HttpServlet {
 				
 				doAction(new RePresentation.EntityFinder() {
 					public Object find(Class clazz, Object primaryKey) {
+					    if(em == null) return createFakeEntity(clazz, primaryKey);
 						return em.find(clazz, primaryKey);
 					}
 				}, request, result);
@@ -170,8 +173,23 @@ public class AjaxService extends HttpServlet {
 		}
 	}
 
+    /** Creates a fake entity */
+	protected Object createFakeEntity(Class clazz, Object primaryKey) {
+	    try {
+	        Object ins = clazz.newInstance();
+	        for(Field f: clazz.getFields()) {
+	            if(f.isAnnotationPresent(Id.class)) {
+	                f.set(ins, primaryKey);
+	                break;
+	            }
+	        }
+	        return ins;
+	    }catch(Exception e) {
+	        throw new RuntimeException(e);
+	    }
+    }
 
-	protected void doAction(RePresentation.EntityFinder ef, HttpServletRequest request, AjaxRequestResult result) throws Throwable {
+    protected void doAction(RePresentation.EntityFinder ef, HttpServletRequest request, AjaxRequestResult result) throws Throwable {
 		String beanName = request.getParameter(Ajax.BEAN_NAME_PARAM);
 		String methodName = request.getParameter(Ajax.METHOD_NAME_PARAM);
 		

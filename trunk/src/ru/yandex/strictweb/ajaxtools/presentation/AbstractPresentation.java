@@ -1,5 +1,6 @@
 package ru.yandex.strictweb.ajaxtools.presentation;
 
+import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Iterator;
 import java.util.List;
@@ -23,7 +24,7 @@ public abstract class AbstractPresentation implements Presentation {
 	NumberFormat numberFormat;
 	boolean forceEnumsAsClasses = false;
 	DateTimeFormat dateFormat = DateTimeFormat.DATE;
-	StringBuilder buf;
+	Appendable buf;
 
 	boolean presentEntity(Object o, boolean first) throws Exception {
 
@@ -48,14 +49,18 @@ public abstract class AbstractPresentation implements Presentation {
 		return first;
 	}
 	
-	/* (non-Javadoc)
-	 * @see ru.yandex.strictweb.ajaxtools.presentation.Presentation#toString(java.lang.Object)
-	 */
-	public String toString(Object o) throws Exception {
-		buf = new StringBuilder();
-		presentOne(null, o, false);
-		return buf.toString();
-	}	
+    public String toString(Object o) throws Exception {
+        return toString(null, o);
+    }
+    
+    public String toString(String rootKey, Object o) throws Exception {
+        boolean returnStr = buf == null;
+        if(buf == null) buf = new StringBuilder();
+        
+        presentOne(rootKey, o, false);
+        
+        return returnStr ? buf.toString() : null;
+    }   
 	
 	void presentOne(String key, Object o, boolean forceItem) throws Exception {
 		boolean first = true;
@@ -72,7 +77,7 @@ public abstract class AbstractPresentation implements Presentation {
 		} else if(ClassMethodsInfo.isPresentableOrEntity(o.getClass())) {
 			if(!hashBegin(key, o)) return;
 			presentEntity(o, true);
-			hashEnd(key);
+			hashEnd(key, o);
 		} else if(o instanceof Object[]) {
 			listBegin(key, o);
 			for(Object a : (Object[])o) {
@@ -89,7 +94,7 @@ public abstract class AbstractPresentation implements Presentation {
 				presentNumber(a.toString(), "1", true);
 				first = false;
 			}
-			hashEnd(key);
+			hashEnd(key, o);
 		} else if(o instanceof Iterable) {
 			listBegin(key, o);
 			for(Object a : (Iterable)o) {
@@ -106,7 +111,7 @@ public abstract class AbstractPresentation implements Presentation {
 				presentOne(e.getKey().toString(), e.getValue(), true);
 				first = false;
 			}
-			hashEnd(key);
+			hashEnd(key, o);
 		} else if(o instanceof Boolean) {
 			presentNumber(key, ((Boolean)o).booleanValue() ? "1" : "0", forceItem);
 		} else if(o instanceof Enum) {
@@ -120,17 +125,17 @@ public abstract class AbstractPresentation implements Presentation {
 		}				
 	}
 	
-	abstract boolean hashBegin(String key, Object x);
-	abstract void hashEnd(String key);
-	
-	abstract boolean listBegin(String key, Object x);
-	abstract void listEnd(String key);
-	
-	abstract void addSeparator();
-	
-	abstract void presentString(String key, String val, boolean forceItem);
-	abstract void presentNull(String key, boolean forceItem);
-	abstract void presentNumber(String key, String val, boolean forceItem);
+    abstract boolean hashBegin(String key, Object x) throws IOException;
+    abstract void hashEnd(String key, Object x) throws IOException;
+    
+    abstract boolean listBegin(String key, Object x) throws IOException;
+    abstract void listEnd(String key) throws IOException;
+    
+    abstract void addSeparator() throws IOException;
+    
+    abstract void presentString(String key, String val, boolean forceItem) throws IOException;
+    abstract void presentNull(String key, boolean forceItem) throws IOException;
+    abstract void presentNumber(String key, String val, boolean forceItem) throws IOException;
 
 	public DateTimeFormat getDateFormat() {
 		return dateFormat;

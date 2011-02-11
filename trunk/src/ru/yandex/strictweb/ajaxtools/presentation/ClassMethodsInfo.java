@@ -6,9 +6,11 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -315,10 +317,12 @@ public class ClassMethodsInfo {
 		Boolean b = presentableClasses.get(cls);			
 		
 		if(b==null) {
-			b = cls.isAnnotationPresent(Entity.class) || 
+			b = !cls.equals(Date.class) && !cls.equals(Timestamp.class) && (
+			    cls.isAnnotationPresent(Entity.class) || 
 				cls.isAnnotationPresent(Presentable.class) ||
 				isPojoBean(cls) ||
-				(cls.getSuperclass()!=null && cls.getSuperclass().isAnnotationPresent(Entity.class));
+				(cls.getSuperclass()!=null && cls.getSuperclass().isAnnotationPresent(Entity.class))
+			);
 			presentableClasses.put(cls, b);			
 		}
 		

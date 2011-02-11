@@ -55,4 +55,5 @@ public class Style {
 	public String webkitTransformOrigin;
 	public String MozTransformOrigin;
     public String cursor;
+    public int zIndex;
 }

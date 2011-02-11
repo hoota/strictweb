@@ -1116,7 +1116,8 @@ public class Parser implements CompilerPlugin {
 		}
 		
 		cl.isNative = hasAnnotation(Native.class.getSimpleName(), modifiers);
-		if(null != superclassType) {
+		if(null != superclassType && !hasAnnotation(IgnoreExtends.class.getSimpleName(), modifiers)) {
+            
 			VarType superType = new VarType(superclassType);
 			String superTypeName = superType.getName();
 			

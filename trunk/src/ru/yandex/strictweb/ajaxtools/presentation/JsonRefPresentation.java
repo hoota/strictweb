@@ -32,15 +32,25 @@ public class JsonRefPresentation implements Presentation {
 	private StringBuilder buf;
 	private StringBuilder assign;
 	
-	@Override
 	public String toString(Object o) throws Exception {
-		buf = new StringBuilder("var o={};\n");
-		assign = new StringBuilder();
-		
-		presentOne(null, o, -1);
-		
-		return buf.append(";\n").append(assign).toString();
-	}
+        return toString(null, o);
+    }
+    
+    @Override
+    public String toString(String rootKey, Object o) throws Exception {
+        boolean returnStr = buf == null;
+        if(buf == null) buf = new StringBuilder();
+        
+        buf.append("var o={};\n");
+        
+        assign = new StringBuilder();
+        
+        presentOne(rootKey, o, -1);
+        
+        buf.append(";\n").append(assign);
+        
+        return returnStr ? buf.toString() : null;
+    }
 	
 	void objectBegin(String key, Object x, char bracket) {
 		int ci = currentIndex;

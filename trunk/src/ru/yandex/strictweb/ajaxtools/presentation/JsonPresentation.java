@@ -1,62 +1,81 @@
 package ru.yandex.strictweb.ajaxtools.presentation;
 
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 
 public class JsonPresentation extends AbstractPresentation {
 	static Pattern hashKeyPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
 	
+    public JsonPresentation() {
+    }
+    
+    public JsonPresentation(Appendable writer) {
+        buf = writer;
+    }	
+	
 	public static String present(Object o) throws Exception {
 		JsonPresentation js = new JsonPresentation();
 		return js.toString(o);
 	}
 	
-	@Override
-	boolean hashBegin(String key, Object x) {
-		if(key == null) buf.append("{");
-		else buf.append(safeKey(key) + "{");
-		return true;
-	}
+	public String toString(String rootKey, Object o) throws Exception {
+	    boolean returnStr = buf == null;
+	    if(buf == null) buf = new StringBuilder();
 
-	@Override
-	void hashEnd(String key) {
-		buf.append("}");
-	}
+	    if(rootKey != null) buf.append('{');
+	    presentOne(rootKey, o, false);
+	    if(rootKey != null) buf.append('}');
 
-	@Override
-	boolean listBegin(String key, Object x) {
-		if(key == null) buf.append("[");
-		else buf.append(safeKey(key)+"[");
-		return true;
-	}
-
-	@Override
-	void listEnd(String key) {
-		buf.append("]");
-	}
-
-	@Override
-	void addSeparator() {
-		buf.append(',');
-	}
-
-	@Override
-	void presentString(String key, String val, boolean forceItem) {
-		if(key == null) buf.append(safe(val));
-		else buf.append(safeKey(key)+safe(val));
+	    return returnStr ? buf.toString() : null;
 	}
 	
 	@Override
-	void presentNull(String key, boolean forceItem) {
-		if(key == null) buf.append("null");
-		else buf.append(safeKey(key)+"null");		
+	boolean hashBegin(String key, Object x) throws IOException {
+		if(key == null) buf.append("{");
+		else buf.append(safeKey(key)).append("{");
+		return true;
 	}
 
 	@Override
-	void presentNumber(String key, String val, boolean forceItem) {
-		if(key == null) buf.append(val);
-		else buf.append(safeKey(key) + val);
-	}
+    void hashEnd(String key, Object x) throws IOException {
+        buf.append("}");
+    }
+
+	@Override
+    boolean listBegin(String key, Object x) throws IOException {
+        if(key == null) buf.append("[");
+        else buf.append(safeKey(key)).append("[");
+        return true;
+    }
+
+	@Override
+    void listEnd(String key) throws IOException {
+        buf.append("]");
+    }
+
+	@Override
+    void addSeparator() throws IOException {
+        buf.append(',');
+    }
+
+	@Override
+    void presentString(String key, String val, boolean forceItem) throws IOException {
+        if(key == null) buf.append(safe(val));
+        else buf.append(safeKey(key)).append(safe(val));
+    }
+	
+	@Override
+    void presentNull(String key, boolean forceItem) throws IOException {
+        if(key == null) buf.append("null");
+        else buf.append(safeKey(key)).append("null");       
+    }
+
+	@Override
+    void presentNumber(String key, String val, boolean forceItem) throws IOException {
+        if(key == null) buf.append(val);
+        else buf.append(safeKey(key)).append(val);
+    }
 
 	static Pattern slashPattern = Pattern.compile("\\\\");
 	static Pattern quotePattern = Pattern.compile("'");
