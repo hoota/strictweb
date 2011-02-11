@@ -5,6 +5,13 @@ import java.util.regex.Pattern;
 public class JsonParanoidPresentation extends JsonPresentation {
 	static Pattern dblQuotePattern = Pattern.compile("\"");
 	
+	public JsonParanoidPresentation() {
+    }
+    
+    public JsonParanoidPresentation(Appendable writer) {
+        buf = writer;
+    }
+	
 	@Override
 	public String safe(String s) {
 		s = slashPattern.matcher(s).replaceAll("\\\\\\\\");
