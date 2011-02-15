@@ -21,7 +21,7 @@ public abstract class AbstractPresentation implements Presentation {
 		}
 	}
 	
-	NumberFormat numberFormat;
+	NumberFormat numberFormat = numberFormats[6];
 	boolean forceEnumsAsClasses = false;
 	DateTimeFormat dateFormat = DateTimeFormat.DATE;
 	Appendable buf;
