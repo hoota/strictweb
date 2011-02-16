@@ -4,13 +4,27 @@ import ru.yandex.strictweb.scriptjava.base.util.TimeoutIdentifier;
 
 
 public class ValidatorHelperBase extends CommonElements {
-	public static final String msgClassName = "invalidFieldMessage";
+	public String msgClassName = "invalidFieldMessage";
+	public boolean ignoreDisabledFields = true;
 	
-	public boolean validate(DOMBuilder root) {
+	public ValidatorHelperBase() {
+    }
+	
+	public ValidatorHelperBase setIgnoreDisabledFields(boolean ignoreDisabledFields) {
+        this.ignoreDisabledFields = ignoreDisabledFields;
+        return this;
+    }
+	
+	public ValidatorHelperBase setMsgClassName(String msgClassName) {
+        this.msgClassName = msgClassName;
+        return this;
+    }
+
+    public boolean validate(DOMBuilder root) {
 		try {
 			root.forEachSubchild(new DOMEventCallback() {
 				public boolean delegate(Node n) {
-					if(n.field == DOMBuilder.DISABLED) return false;
+					if(ignoreDisabledFields && n.field == DOMBuilder.DISABLED) return false;
 					
 					if(n.className == msgClassName) n.parentNode.removeChild(n);
 					else

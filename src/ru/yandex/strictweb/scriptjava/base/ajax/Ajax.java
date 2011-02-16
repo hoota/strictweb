@@ -262,6 +262,7 @@ public class Ajax {
 		}
 		
 		for(Node el : start.childNodes) {
+		    if(el.field == DOMBuilder.DISABLED) continue;
 			if((el.id!=null||el.name!=null) && (el.tagName=="INPUT" || el.tagName=="SELECT" || el.tagName=="TEXTAREA")) {
 				if(el.type == "radio" && !el.checked) continue;
 				
