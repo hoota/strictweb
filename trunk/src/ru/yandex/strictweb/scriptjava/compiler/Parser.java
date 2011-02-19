@@ -689,19 +689,26 @@ public class Parser implements CompilerPlugin {
 		cl.skipInnerObfuscation = true;
 		classes.put(cl.name, cl);
 
-		for(Method m : claz.getMethods()) 
-			if(ClassMethodsInfo.isGetter(m) 
-				&& !ClassMethodsInfo.excludedMethods.contains(m)
-				&& !m.isAnnotationPresent(AjaxTransient.class)
-				&& (!m.isAnnotationPresent(Transient.class) || m.isAnnotationPresent(Presentable.class))) {
+		for(Method m : claz.getMethods()) {
+		    if(ClassMethodsInfo.isSetter(m)) {
+	            ParsedMethod pm = new ParsedMethod(m.getName(), null, cl);
+	            pm.retType = VarType.VOID;
+                cl.methods.put(pm.name, pm);		        
+		    }
+		    
+		    if(ClassMethodsInfo.isGetter(m) 
+		        && !ClassMethodsInfo.excludedMethods.contains(m)
+		        && !m.isAnnotationPresent(AjaxTransient.class)
+		        && (!m.isAnnotationPresent(Transient.class) || m.isAnnotationPresent(Presentable.class))) {
 
-			ParsedMethod pm = new ParsedMethod(m.getName(), null, cl);
-			try {
-			    pm.retType = new VarType(m.getGenericReturnType());
-			    cl.methods.put(pm.name, pm);
-			}catch(Throwable th) {
-		        System.err.println("Warning: " + th.getMessage());
-			}
+		        ParsedMethod pm = new ParsedMethod(m.getName(), null, cl);
+		        try {
+		            pm.retType = new VarType(m.getGenericReturnType());
+		            cl.methods.put(pm.name, pm);
+		        }catch(Throwable th) {
+		            System.err.println("Warning: " + th.getMessage());
+		        }
+		    }
 		}
 
 		for(Field f : claz.getFields()) 

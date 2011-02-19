@@ -257,6 +257,17 @@ public class ClassMethodsInfo {
 		;
 	}
 
+    public static boolean isSetter(Method m) {
+        String n = m.getName();
+        
+        if(m.getParameterTypes().length != 1) return false;
+        
+        int mod = m.getModifiers();
+        if(!Modifier.isPublic(mod) || Modifier.isStatic(mod)) return false;
+        
+        return n.startsWith("set") && n.length() > 3;
+    }	
+	
 	public static Class<?> getEntityIdClass(Class<?> clazz) {
 		Class<?> classId = classesIds.get(clazz);			
 		
