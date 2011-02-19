@@ -182,7 +182,7 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 		int nBegin = mName.startsWith("is") ? 2 : 3;
 		
 		String name = Character.toLowerCase(mName.charAt(nBegin)) + mName.substring(nBegin+1);
-//		System.out.println(name);
+//		System.out.println(mName);
 
 		JCMethodDecl mDecl = cl.methods.get(mName).decl;
 		boolean isAjaxTransient = mDecl!=null && parser.hasAnnotation("AjaxTransient", mDecl.getModifiers());
