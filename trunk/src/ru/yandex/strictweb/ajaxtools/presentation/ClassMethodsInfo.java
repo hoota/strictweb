@@ -328,7 +328,7 @@ public class ClassMethodsInfo {
 		Boolean b = presentableClasses.get(cls);			
 		
 		if(b==null) {
-			b = !cls.equals(Date.class) && !cls.equals(Timestamp.class) && (
+			b = !cls.equals(Date.class) && !cls.equals(Timestamp.class) && !cls.isEnum() && (
 			    cls.isAnnotationPresent(Entity.class) || 
 				cls.isAnnotationPresent(Presentable.class) ||
 				isPojoBean(cls) ||
