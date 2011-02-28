@@ -1,6 +1,5 @@
 package ru.yandex.strictweb.ajaxtools.presentation;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
@@ -82,10 +81,21 @@ public class XmlPresentation extends AbstractPresentation {
 	}
 	
 	public static String safe(String s) {
-		s = quotePattern.matcher(s).replaceAll("&quot;");
-		s = ltPattern.matcher(s).replaceAll("&lt;");
-		s = ampPattern.matcher(s).replaceAll("&amp;");
-		return gtPattern.matcher(s).replaceAll("&gt;");
+	    int len = s.length();
+	    StringBuilder bb = new StringBuilder(len);
+	    for(int i=0; i<len; i++) {
+	        char c = s.charAt(i);
+	        if(c == '"') bb.append("&quot;");
+	        else if(c == '&') bb.append("&amp;");
+            else if(c == '<') bb.append("&lt;");
+            else if(c == '>') bb.append("&gt;");
+            else bb.append(c);
+	    }
+	    return bb.toString();
+//		s = quotePattern.matcher(s).replaceAll("&quot;");
+//		s = ampPattern.matcher(s).replaceAll("&amp;");
+//		s = ltPattern.matcher(s).replaceAll("&lt;");
+//		return gtPattern.matcher(s).replaceAll("&gt;");
 	}
 }
 
