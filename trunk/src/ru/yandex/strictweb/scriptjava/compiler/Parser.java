@@ -340,7 +340,9 @@ public class Parser implements CompilerPlugin {
 			code.append("_isEnum:true, toString: function() {return '"+enumName+"';}}");
 		}
 		code.append("\n];\n"+eName+".valueOf = function(n){return "+eName+"[n];}\n");
-		
+		if(obfuscate) {
+	        code.append(getObfuscatedName(eName)+" = "+eName+";\n");		    
+		}
 	}
 
 	private VarType drawEnumFieldOrMethod(String mName, Object value) {
@@ -1247,7 +1249,7 @@ public class Parser implements CompilerPlugin {
 			if(lastParam.toString().indexOf("...") > 0) {
 //				System.out.println("!!!" + lastParam);
 //				code.append("var "+lpn+"=" + "[];"+indentPrefix);
-				code.append("{var $$$=[];for(var i=0;i<arguments.length;i++)if(i>="+(params.size()-1)+")$$$.push(arguments[i]);"+lpn+"=$$$;}"+indentPrefix);					
+				code.append("{var $$$=[];for(var i=0;i<arguments.length;i++)if(i>="+(params.size()-1)+")$$$.push(arguments[i]);"+getObfuscatedName(lpn)+"=$$$;}"+indentPrefix);					
 //				System.out.println("###" + lastParam.);
 			}
 		}
