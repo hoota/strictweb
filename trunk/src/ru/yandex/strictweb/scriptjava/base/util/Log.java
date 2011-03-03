@@ -1,38 +1,38 @@
 package ru.yandex.strictweb.scriptjava.base.util;
 
 import ru.yandex.strictweb.scriptjava.base.CommonElements;
-import ru.yandex.strictweb.scriptjava.base.DOMBuilder;
+import ru.yandex.strictweb.scriptjava.base.Node;
 import ru.yandex.strictweb.scriptjava.base.ScriptJava;
 
 public class Log extends CommonElements {
 	public static String logDivId = "log-output";
 	
-	public static void info(String msg) {
+	public static void info(Object msg) {
 		if(ScriptJava.console!=null) ScriptJava.console.info(msg);
-		DOMBuilder ld = $(logDivId);
+		Node ld = $$(logDivId);
 		if(ld == null) return;
-		ld.add($DIV().className("info").innerHTML(msg));
+		ld.appendChild($DIV().className("info").innerHTML(msg.toString()).node);
 	}
 
-	public static void error(String msg) {
+	public static void error(Object msg) {
 		if(ScriptJava.console!=null) ScriptJava.console.error(msg);
-		DOMBuilder ld = $(logDivId);
-		if(ld == null) return;
-		ld.add($DIV().className("error").innerHTML(msg));
+        Node ld = $$(logDivId);
+        if(ld == null) return;
+        ld.appendChild($DIV().className("error").innerHTML(msg.toString()).node);
 	}
 
-	public static void warn(String msg) {
+	public static void warn(Object msg) {
 		if(ScriptJava.console!=null) ScriptJava.console.warn(msg);
-		DOMBuilder ld = $(logDivId);
-		if(ld == null) return;
-		ld.add($DIV().className("warn").innerHTML(msg));
+        Node ld = $$(logDivId);
+        if(ld == null) return;
+        ld.appendChild($DIV().className("warn").innerHTML(msg.toString()).node);
 	}
 	
-	public static void debug(String msg) {
+	public static void debug(Object msg) {
 		if(ScriptJava.console!=null) ScriptJava.console.debug(msg);
-		DOMBuilder ld = $(logDivId);
-		if(ld == null) return;
-		ld.add($DIV().className("debug").innerHTML(msg));
+        Node ld = $$(logDivId);
+        if(ld == null) return;
+        ld.appendChild($DIV().className("debug").innerHTML(msg.toString()).node);
 	}
 
 	public static void makeLogDiv() {

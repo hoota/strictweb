@@ -245,6 +245,16 @@ public class ScriptJava extends JSObject {
 		return null;
 	}
 
+    @NativeCode("{var iid=setInterval(f, millis);return iid;};")
+    public static IntervalIdentifier setIntervalFunc(JavaScriptFunction f, int millis) {
+        return null;
+    }
+    
+    @NativeCode("{var iid=setTimeout(f, millis);return iid;};")
+    public static TimeoutIdentifier setTimeoutFunc(JavaScriptFunction f, int millis) {
+        return null;
+    }	
+	
 	public static void clearInterval(IntervalIdentifier intervalId) {
 		window.clearInterval(intervalId);
 	}

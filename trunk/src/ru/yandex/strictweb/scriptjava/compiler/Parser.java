@@ -849,10 +849,11 @@ public class Parser implements CompilerPlugin {
 				}
 			} else {
 				if(null!=superInvocation) {
-					code.append(superInvocation);
+					code.append(getObfuscatedName(superInvocation+mName));
 					superInvocation = null;
+				} else {
+				    code.append(getObfuscatedName(mName, cl.isNative));
 				}
-				code.append(getObfuscatedName(mName, cl.isNative));
 				//System.out.println(inv);
 				parseArguments("(", arguments, ")");
 			}
@@ -1236,7 +1237,7 @@ public class Parser implements CompilerPlugin {
 		if(debugLevel > 0) indentPrefix += "\t";
 		code.append(ifObfuscated("{", " {"+indentPrefix));
 		if(anonymousTester.test(block)) {
-			code.append("var "+(currentClass.lastElement().selfPrefix = "self" + currentClass.size())+ifObfuscated("=this;", " = this;\n"+indentPrefix));
+			code.append("var "+(currentClass.lastElement().selfPrefix = getObfuscatedName("self" + currentClass.size()))+ifObfuscated("=this;", " = this;\n"+indentPrefix));
 		} else currentClass.lastElement().selfPrefix = "this";
 		
 		if(params.size()>0) {
@@ -1354,7 +1355,7 @@ public class Parser implements CompilerPlugin {
 //		 only NOT static fields
 
 		if(hasAnonymousClassDeclaration) {
-			code.append("var "+(cl.selfPrefix = "self")+" = this;\n");
+			code.append("var "+(cl.selfPrefix = getObfuscatedName("self"))+" = this;\n");
 		} else cl.selfPrefix = "this";
 		
 		for(JCTree tr : cl.type.getMembers()) if(tr instanceof JCVariableDecl){
@@ -1510,7 +1511,7 @@ public class Parser implements CompilerPlugin {
 			String ip = indentPrefix;
 			if(debugLevel > 0) indentPrefix += "\t";
 			if(null == claz || !claz.isInterface) {
-				code.append(getObfuscatedName("ScriptJava")+"."+getObfuscatedName("extend")+"(new " + type.getName());
+				code.append(getObfuscatedName("ScriptJava")+"."+getObfuscatedName("extend")+"(new " + getObfuscatedName(type.getName()));
 				parseArguments("(", node.getArguments(), ")");
 				code.append(", {");
 			} else code.append("{");
