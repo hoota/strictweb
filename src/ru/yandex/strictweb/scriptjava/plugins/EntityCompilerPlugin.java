@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.sun.tools.internal.ws.wsdl.framework.Entity;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 
+import ru.yandex.strictweb.ajaxtools.annotation.AjaxTransient;
+import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
+import ru.yandex.strictweb.scriptjava.base.ScriptJava;
 import ru.yandex.strictweb.scriptjava.compiler.CompilerPlugin;
 import ru.yandex.strictweb.scriptjava.compiler.IgnoreExtends;
 import ru.yandex.strictweb.scriptjava.compiler.ParsedClass;
@@ -44,14 +47,15 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 			parser.code.append("() {\n");
 		}
 
-		Map<String, JCExpression> fields = new TreeMap<String, JCExpression>();
+		Map<String, JCVariableDecl> fields = new TreeMap<String, JCVariableDecl>();
 		
-		for(JCTree tr : cl.type.getMembers()) if(tr instanceof JCVariableDecl){
+		for(JCTree tr : cl.type.getMembers()) if(tr instanceof JCVariableDecl) {
 			JCVariableDecl f = (JCVariableDecl)tr;
+			if(parser.isStatic(f.getModifiers())) continue;
 //			System.out.println(f);
-			if(parser.hasAnnotation("AjaxTransient", f.getModifiers())) continue;
+			if(parser.hasAnnotation(AjaxTransient.class.getSimpleName(), f.getModifiers())) continue;
 			if(null!=f.getInitializer()) {
-				fields.put(f.getName().toString(), f.getInitializer());					
+				fields.put(f.getName().toString(), f);					
 			}
 		}
 		
@@ -64,46 +68,25 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 			String mName = m.getName().toString();
 			boolean isAbstract = parser.isAbstract(m.getModifiers());
 			boolean isStatic = parser.isStatic(m.getModifiers());
-			boolean isAjax = !parser.hasAnnotation("AjaxTransient", m.getModifiers())
+			boolean isAjax = !parser.hasAnnotation(AjaxTransient.class.getSimpleName(), m.getModifiers())
 				|| parser.hasAnnotation("Id", m.getModifiers());
 
 			if(isAbstract || isStatic || !isAjax) continue;
 			
-			boolean forceList = false;
-			try {
-				String ajaxVal = parser.getAnnotationValue("AJAX", m.getModifiers());
-				//System.out.println(m.getName() + " :: " + ajaxVal);
-				forceList = ajaxVal.replaceAll("\\s", "").indexOf("forceList=true") > 0;
-			}catch(RuntimeException e) {}
-			
 			if(mName.startsWith("get") && m.getParameters().size() == 0) {
-				String val = null;
 				String name = Character.toLowerCase(mName.charAt(3)) + mName.substring(4);
-				VarType type = cl.methods.get(mName).retType;
-				
-				ParsedClass fcl = parser.classes.get(type.getName());
-				if(fields.containsKey(name) && (null!=fcl&&fcl.isEnum || type.nameIs("String") || VarType.isPrimitiveType(m.getReturnType()))) {
-					parser.code.append("\tthis."+name+"=");
-					parser.parse(fields.get(name));
-					parser.code.append(";\n");
-					continue;
-				}				
-				
-				if(type.nameIs("List")) val = "[]";
-				else if(type.nameIs("Map")) val = "{}";
-				else if(type.nameIs("Set")) {
-					if(forceList) {
-						val = "[]";
-						type.setName("List");
-					} else val = "{}";
-				}
-				
-
-				if(null == val || "null".equals(val.toString())) continue;
-				
-				parser.code.append("\tthis."+name+"="+val+";\n");
+	            fields.remove(name);
+		        VarType type = cl.methods.get(mName).retType;
+				printFieldInitializer(cl, name, type, fields, VarType.isPrimitiveType(m.getReturnType()));
 			}
 		}
+		
+		for(Map.Entry<String, JCVariableDecl> fe: fields.entrySet()) {
+            VarType type = cl.fields.get(fe.getKey()).type;
+            printFieldInitializer(cl, fe.getKey(), type, fields, VarType.isPrimitiveType(fe.getValue().getType()));		    
+		}
+		
+//		System.out.println(cl.name + " :: " + parser.getObfuscatedName(cl) + " :: " + fields.keySet());
 		
 		if(constructor!=null) {
 			parser.currentClass.add(cl);
@@ -119,7 +102,7 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 		if(null!=cl.type.getExtendsClause()) {
 			String superType = cl.type.getExtendsClause().toString();			
 			if(!parser.hasAnnotation(IgnoreExtends.class.getSimpleName(), cl.type.getModifiers()) && !parser.classes.get(superType).isNative) {
-				parser.code.append(parser.getObfuscatedName("ScriptJava")+"."+parser.getObfuscatedName("extend") + "("+cl.name+".prototype, "+superType+".prototype)\n");
+				parser.code.append(parser.getObfuscatedName(ScriptJava.class.getSimpleName())+"."+parser.getObfuscatedName("extend") + "("+cl.name+".prototype, "+superType+".prototype)\n");
 			}
 		}		
 		
@@ -128,7 +111,26 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 		return true;
 	}
 
-	public boolean compileClassInitializers(ParsedClass cl) {
+	private void printFieldInitializer(ParsedClass cl, String name, VarType type, Map<String, JCVariableDecl> fields, boolean isPrimitive) {
+        String val = null;
+        
+        ParsedClass fcl = parser.classes.get(type.getName());
+        if(fields.containsKey(name) && (null!=fcl&&fcl.isEnum || type.nameIs(String.class.getSimpleName()) || isPrimitive)) {
+            parser.code.append("\tthis."+name+"=");
+            parser.parse(fields.get(name).getInitializer());
+            parser.code.append(";\n");
+            return;
+        }               
+        
+        if(type.nameIs("List")) val = "[]";
+        else if(type.nameIs("Map") || type.nameIs("Set")) val = "{}";        
+
+        if(null == val || "null".equals(val.toString())) return;
+        
+        parser.code.append("\tthis."+name+"="+val+";\n");
+    }
+
+    public boolean compileClassInitializers(ParsedClass cl) {
 		return isEntityClass(cl);
 	}
 
@@ -138,8 +140,8 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 		if(knownClasses.containsKey(cl.name)) return knownClasses.get(cl.name);
 		boolean res = 
 			(cl.type != null && (
-				parser.hasAnnotation("Entity", cl.type.getModifiers())
-				|| parser.hasAnnotation("Presentable", cl.type.getModifiers())
+				parser.hasAnnotation(Entity.class.getSimpleName(), cl.type.getModifiers())
+				|| parser.hasAnnotation(Presentable.class.getSimpleName(), cl.type.getModifiers())
 			)) || parser.hasClassLabel(cl.name, LABEL)
 		;
 		knownClasses.put(cl.name, res);
@@ -185,7 +187,7 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 //		System.out.println(mName);
 
 		JCMethodDecl mDecl = cl.methods.get(mName).decl;
-		boolean isAjaxTransient = mDecl!=null && parser.hasAnnotation("AjaxTransient", mDecl.getModifiers());
+		boolean isAjaxTransient = mDecl!=null && parser.hasAnnotation(AjaxTransient.class.getSimpleName(), mDecl.getModifiers());
 		
 		if(isAjaxTransient) {
 			throw new RuntimeException("Only @AJAX getXXX(), isXXX() and plain setXXX(value) are supported: " + mName);			
