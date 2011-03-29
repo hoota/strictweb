@@ -269,16 +269,18 @@ public class JsonRefPresentation implements Presentation {
 		return enumsAsClasses;
 	}
 
-	public void setDateFormat(DateTimeFormat dateFormat) {
+	public Presentation setDateFormat(DateTimeFormat dateFormat) {
 		this.dateFormat = dateFormat;
+		return this;
 	}
 
 	public DateTimeFormat getDateFormat() {
 		return dateFormat;
 	}
 
-	public void forceEnumsAsClasses(boolean forceEnumsAsClasses) {
+	public Presentation forceEnumsAsClasses(boolean forceEnumsAsClasses) {
 		this.enumsAsClasses = forceEnumsAsClasses;
+		return this;
 	}
 	
 	final static char[] digits = {

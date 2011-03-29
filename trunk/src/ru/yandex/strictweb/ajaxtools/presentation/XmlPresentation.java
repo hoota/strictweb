@@ -59,8 +59,10 @@ public class XmlPresentation extends AbstractPresentation {
     @Override
     void presentNull(String key, boolean forceItem) throws IOException {
         if(key == null) buf.append("<null/>");
-        else if(isXmlName(key) && !forceItem) buf.append("<").append(key).append(" null=\"1\"/>");
-        else buf.append("<null name=\"").append(safe(key)).append("\"/>");
+        else if(forceItem) {
+            if(isXmlName(key)) buf.append("<null name=\"").append(safe(key)).append("\"/>");
+            else buf.append("<null name=\"").append(safe(key)).append("\"/>");
+        }
     }
 
 	@Override

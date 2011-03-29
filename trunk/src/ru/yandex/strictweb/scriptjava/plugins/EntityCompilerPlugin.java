@@ -26,7 +26,7 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 		if(!isEntityClass(cl)) return false;
 		cl.skipInnerObfuscation = true;
 		
-		parser.code.append("function " + cl.name);
+		parser.code.append("function " + parser.getObfuscatedName(cl));
 		JCMethodDecl constructor = null;
 		
 		for(JCTree tr : cl.type.getMembers()) if(tr instanceof JCMethodDecl){

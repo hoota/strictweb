@@ -1507,7 +1507,7 @@ public class Parser implements CompilerPlugin {
 //			anonymousClassDeclarationPresent = true;
 //			if(anonymousClassDeclarationTest) return;
 			JCClassDecl acl = node.getClassBody();
-			//System.out.println(type.getName());
+//			System.out.println(type.getName());
 			ParsedClass claz = classes.get(type.getName());
 			int i = 0;
 			String ip = indentPrefix;
@@ -1558,7 +1558,11 @@ public class Parser implements CompilerPlugin {
 		}catch(Exception e) {
 			try {
 				ParsedClass cl = classes.get(type.getName());
+				if(type.getName().equals("VotingEntity")) {
+				    System.out.println("AAA");
+				}
 				if(cl == null) throw new RuntimeException("Cant find class to create: " + type.getName());
+				if(!cl.canCreateNewInstance) throw new RuntimeException("Cant creat new instance of: " + type.getName());
 				code.append("new "+getObfuscatedName(cl));
 				parseArguments("(", node.getArguments(), ")");
 				currentType = type;
@@ -1625,7 +1629,7 @@ public class Parser implements CompilerPlugin {
 		}
 	}
 	
-	private String getObfuscatedName(ParsedClass cl) {
+	public String getObfuscatedName(ParsedClass cl) {
 		return cl.isNative ? cl.name : getObfuscatedName(cl.name);
 	}
 
