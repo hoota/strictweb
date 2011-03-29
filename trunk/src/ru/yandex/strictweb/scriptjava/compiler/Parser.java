@@ -1558,9 +1558,6 @@ public class Parser implements CompilerPlugin {
 		}catch(Exception e) {
 			try {
 				ParsedClass cl = classes.get(type.getName());
-				if(type.getName().equals("VotingEntity")) {
-				    System.out.println("AAA");
-				}
 				if(cl == null) throw new RuntimeException("Cant find class to create: " + type.getName());
 				if(!cl.canCreateNewInstance) throw new RuntimeException("Cant creat new instance of: " + type.getName());
 				code.append("new "+getObfuscatedName(cl));
