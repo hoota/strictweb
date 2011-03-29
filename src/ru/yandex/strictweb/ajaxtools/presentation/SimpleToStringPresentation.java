@@ -9,7 +9,8 @@ public class SimpleToStringPresentation implements Presentation {
     }
     
     @Override
-    public void forceEnumsAsClasses(boolean forceEnumsAsClasses) {
+    public Presentation forceEnumsAsClasses(boolean forceEnumsAsClasses) {
+    	return this;
     }
 
     @Override
@@ -23,7 +24,8 @@ public class SimpleToStringPresentation implements Presentation {
     }
 
     @Override
-    public void setDateFormat(DateTimeFormat dateFormat) {
+    public Presentation setDateFormat(DateTimeFormat dateFormat) {
+    	return this;
     }
 
     @Override

@@ -141,15 +141,17 @@ public abstract class AbstractPresentation implements Presentation {
 		return dateFormat;
 	}
 
-	public void setDateFormat(DateTimeFormat dateFormat) {
+	public Presentation setDateFormat(DateTimeFormat dateFormat) {
 		this.dateFormat = dateFormat;
+		return this;
 	}
 
 	public boolean isEnumsAsClasses() {
 		return forceEnumsAsClasses;
 	}
 
-	public void forceEnumsAsClasses(boolean forceEnumsAsClasses) {
+	public Presentation forceEnumsAsClasses(boolean forceEnumsAsClasses) {
 		this.forceEnumsAsClasses = forceEnumsAsClasses;
+		return this;
 	}
 }
