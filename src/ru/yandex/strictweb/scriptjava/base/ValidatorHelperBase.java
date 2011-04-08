@@ -50,12 +50,12 @@ public class ValidatorHelperBase extends CommonElements {
 		);
 		
 		n.focus();
-		ScriptJava.setTimeout(new VoidDelegate<TimeoutIdentifier>() {
+		StrictWeb.setTimeout(new VoidDelegate<TimeoutIdentifier>() {
 			public void voidDelegate(TimeoutIdentifier arg) {
 				int top = 0;
 				for(Node q = n; q!=null && q.offsetTop>0; q = q.offsetParent) top += q.offsetTop;
-				if(top - ScriptJava.document.body.scrollTop < 50) {
-					ScriptJava.window.scrollBy(0, -100);
+				if(top - StrictWeb.document.body.scrollTop < 50) {
+					StrictWeb.window.scrollBy(0, -100);
 				}
 			}
 		}, 100);

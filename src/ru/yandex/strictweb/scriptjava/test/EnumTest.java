@@ -1,7 +1,7 @@
 package ru.yandex.strictweb.scriptjava.test;
 
 public enum EnumTest {
-	A("ScriptJava compiler"),
+	A("StrictWeb compiler"),
 	B("Supports:")
 	,Enums(" Enums")
 	,Anon(" Anonymous classes")

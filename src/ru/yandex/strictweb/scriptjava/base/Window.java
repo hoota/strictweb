@@ -25,7 +25,7 @@ public abstract class Window {
 	public int pageYOffset, scrollY;
 	public int scrollMaxX, scrollMaxY;
 	
-	/** Please Use ScriptJava.event to get global event */
+	/** Please Use StrictWeb.event to get global event */
 	@Deprecated
 	public DOMEvent event;
 	

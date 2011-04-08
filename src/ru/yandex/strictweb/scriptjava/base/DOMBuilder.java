@@ -3,7 +3,7 @@ package ru.yandex.strictweb.scriptjava.base;
 import java.util.LinkedList;
 import java.util.List;
 
-public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBuilder> extends ScriptJava {
+public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBuilder> extends StrictWeb {
 	public static final String EV_ONKEYDOWN = "onkeydown";
 	public static final String EV_ONBLUR = "onblur";
 	public static final String EV_ONFOCUS = "onfocus";
@@ -27,44 +27,44 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		node = (N)createNode(tagName);
 	}
 	
-	@NativeCode("{this.node[eventName](ScriptJava.globalEvent, nullNode);return this;}")
+	@NativeCode("{this.node[eventName](%StrictWeb%.%globalEvent%, nullNode);return this;}")
 	final public S fireEvent(String eventName, boolean nullNode) {
 		return (S)this;
 	}
 	
 	final public S onClick(DOMEventCallback callback) {
         node.style.cursor = "pointer";
-		ScriptJava.setDOMEventCallback(node, EV_ONCLICK, callback);
+		StrictWeb.setDOMEventCallback(node, EV_ONCLICK, callback);
 		return (S)this;
 	}
 	
 	final public S onMouseMove(DOMEventCallback onMouseMoveCallback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONMOUSEMOVE, onMouseMoveCallback);
+		StrictWeb.setDOMEventCallback(node, EV_ONMOUSEMOVE, onMouseMoveCallback);
 		return (S)this;
 	}
 	
 	final public S onMouseOut(DOMEventCallback onMouseOutCallback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONMOUSEOUT, onMouseOutCallback);
+		StrictWeb.setDOMEventCallback(node, EV_ONMOUSEOUT, onMouseOutCallback);
 		return (S)this;
 	}
 	
 	final public S onMouseUp(DOMEventCallback onMouseUpCallback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONMOUSEUP, onMouseUpCallback);
+		StrictWeb.setDOMEventCallback(node, EV_ONMOUSEUP, onMouseUpCallback);
 		return (S)this;
 	}
 
 	final public S onMouseDown(DOMEventCallback onMouseDownCallback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONMOUSEDOWN, onMouseDownCallback);
+		StrictWeb.setDOMEventCallback(node, EV_ONMOUSEDOWN, onMouseDownCallback);
 		return (S)this;
 	}
 	
 	final public S onSubmit(DOMEventCallback callback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONSUBMIT, callback);
+		StrictWeb.setDOMEventCallback(node, EV_ONSUBMIT, callback);
 		return (S)this;
 	}
 	
 	final public S onDblClick(DOMEventCallback callback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONDBLCLICK, callback);
+		StrictWeb.setDOMEventCallback(node, EV_ONDBLCLICK, callback);
 		return (S)this;
 	}
 
@@ -103,7 +103,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 //			"}} return this;}")
 	final public S append(C c) {
 		if(c != null) {
-			node.appendChild(c.nodeName == null ? ScriptJava.document.createTextNode(c): c);
+			node.appendChild(c.nodeName == null ? StrictWeb.document.createTextNode(c): c);
 		}
 		return (S)this;
 	}
@@ -248,7 +248,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	}
 
 	public S onChange(DOMEventCallback callback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONCHANGE, callback);
+		StrictWeb.setDOMEventCallback(node, EV_ONCHANGE, callback);
 		return (S)this;
 	}
 
@@ -343,27 +343,27 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	}
 
 	public S onKeyUp(DOMEventCallback callback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONKEYUP, callback);
+		StrictWeb.setDOMEventCallback(node, EV_ONKEYUP, callback);
 		return (S)this;
 	}
 
 	public S onKeyPress(DOMEventCallback callback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONKEYPRESS, callback);
+		StrictWeb.setDOMEventCallback(node, EV_ONKEYPRESS, callback);
 		return (S)this;
 	}
 
 	public S onBlur(DOMEventCallback callback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONBLUR, callback);
+		StrictWeb.setDOMEventCallback(node, EV_ONBLUR, callback);
 		return (S)this;
 	}
 
 	public S onFocus(DOMEventCallback callback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONFOCUS, callback);
+		StrictWeb.setDOMEventCallback(node, EV_ONFOCUS, callback);
 		return (S)this;
 	}
 	
 	public S onKeyDown(DOMEventCallback callback) {
-		ScriptJava.setDOMEventCallback(node, EV_ONKEYDOWN, callback);
+		StrictWeb.setDOMEventCallback(node, EV_ONKEYDOWN, callback);
 		return (S)this;
 	}
 	

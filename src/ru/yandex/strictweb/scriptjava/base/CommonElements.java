@@ -9,7 +9,7 @@ import ru.yandex.strictweb.scriptjava.base.custom.TableNodeBuilder;
 import ru.yandex.strictweb.scriptjava.base.custom.TableRowNodeBuilder;
 
 
-public class CommonElements extends ScriptJava {
+public class CommonElements extends StrictWeb {
 	public static final DOMEventCallback doNothing = new DOMEventCallback() {
 		public boolean delegate(Node n) {
 			stopEvent();

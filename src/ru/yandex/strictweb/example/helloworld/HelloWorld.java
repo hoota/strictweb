@@ -4,13 +4,13 @@ import ru.yandex.strictweb.scriptjava.base.CommonElements;
 import ru.yandex.strictweb.scriptjava.base.DOMEventCallback;
 import ru.yandex.strictweb.scriptjava.base.Node;
 import ru.yandex.strictweb.scriptjava.base.NodeBuilder;
-import ru.yandex.strictweb.scriptjava.base.ScriptJava;
+import ru.yandex.strictweb.scriptjava.base.StrictWeb;
 
 public class HelloWorld extends CommonElements {
 
 	static {
 		// точка входа
-	    NodeBuilder.wrap(ScriptJava.document.body)
+	    NodeBuilder.wrap(StrictWeb.document.body)
 	    .removeChilds()
 		.add(new HelloWorld().drawForm());
 	}

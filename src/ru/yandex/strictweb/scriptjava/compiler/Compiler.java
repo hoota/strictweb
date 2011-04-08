@@ -12,7 +12,6 @@ import ru.yandex.strictweb.scriptjava.base.DOMEvent;
 import ru.yandex.strictweb.scriptjava.base.DOMEventCallback;
 import ru.yandex.strictweb.scriptjava.base.Document;
 import ru.yandex.strictweb.scriptjava.base.InputValidator;
-import ru.yandex.strictweb.scriptjava.base.JSObject;
 import ru.yandex.strictweb.scriptjava.base.JavaScriptFunction;
 import ru.yandex.strictweb.scriptjava.base.JsException;
 import ru.yandex.strictweb.scriptjava.base.Location;
@@ -20,7 +19,7 @@ import ru.yandex.strictweb.scriptjava.base.Navigator;
 import ru.yandex.strictweb.scriptjava.base.Node;
 import ru.yandex.strictweb.scriptjava.base.NodeBuilder;
 import ru.yandex.strictweb.scriptjava.base.Screen;
-import ru.yandex.strictweb.scriptjava.base.ScriptJava;
+import ru.yandex.strictweb.scriptjava.base.StrictWeb;
 import ru.yandex.strictweb.scriptjava.base.Style;
 import ru.yandex.strictweb.scriptjava.base.ValidatorHelperBase;
 import ru.yandex.strictweb.scriptjava.base.VoidDelegate;
@@ -58,7 +57,7 @@ public class Compiler {
 		
 		this.pathPrefix = pathPrefix;
 		
-		this.parseClass(JSObject.class)
+		this
 			.parseClass(Style.class)
 			.parseClass(JavaScriptFunction.class)
 			
@@ -79,7 +78,7 @@ public class Compiler {
 			
 			.parseClass(IntervalIdentifier.class)
 			.parseClass(TimeoutIdentifier.class)
-			.parseClass(ScriptJava.class)
+			.parseClass(StrictWeb.class)
 			.parseClass(JsException.class)
 			.parseClass(InputValidator.class)
 			

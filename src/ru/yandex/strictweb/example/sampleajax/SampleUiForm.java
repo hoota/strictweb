@@ -8,7 +8,7 @@ import ru.yandex.strictweb.scriptjava.base.DOMEventCallback;
 import ru.yandex.strictweb.scriptjava.base.InputValidator;
 import ru.yandex.strictweb.scriptjava.base.Node;
 import ru.yandex.strictweb.scriptjava.base.NodeBuilder;
-import ru.yandex.strictweb.scriptjava.base.ScriptJava;
+import ru.yandex.strictweb.scriptjava.base.StrictWeb;
 import ru.yandex.strictweb.scriptjava.base.ValidatorHelperBase;
 import ru.yandex.strictweb.scriptjava.base.VoidDelegate;
 import ru.yandex.strictweb.scriptjava.base.ajax.Ajax;
@@ -21,7 +21,7 @@ public class SampleUiForm extends CommonElements {
         initAjax();
         
         // берем <body>
-        NodeBuilder.wrap(ScriptJava.document.body)
+        NodeBuilder.wrap(StrictWeb.document.body)
         
         // убираем из <body> все надписи
         .removeChilds()

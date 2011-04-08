@@ -11,10 +11,11 @@ import ru.yandex.strictweb.scriptjava.base.DOMBuilder;
 import ru.yandex.strictweb.scriptjava.base.DOMEvent;
 import ru.yandex.strictweb.scriptjava.base.DOMEventCallback;
 import ru.yandex.strictweb.scriptjava.base.JsException;
+import ru.yandex.strictweb.scriptjava.base.Native;
 import ru.yandex.strictweb.scriptjava.base.NativeCode;
 import ru.yandex.strictweb.scriptjava.base.Node;
 import ru.yandex.strictweb.scriptjava.base.NodeBuilder;
-import ru.yandex.strictweb.scriptjava.base.ScriptJava;
+import ru.yandex.strictweb.scriptjava.base.StrictWeb;
 import ru.yandex.strictweb.scriptjava.base.VoidDelegate;
 import ru.yandex.strictweb.scriptjava.base.util.Log;
 import ru.yandex.strictweb.scriptjava.compiler.Compiler;
@@ -57,7 +58,7 @@ public class Ajax {
 	public static VoidDelegate<Throwable> defaultErrorHandler = baseErrorHandler;
 
 	public static XMLHttpRequest getHttpRequest() {
-		if(ScriptJava.window.XMLHttpRequest != null) {
+		if(StrictWeb.window.XMLHttpRequest != null) {
 			return new XMLHttpRequest();
 		}
 		
@@ -80,14 +81,14 @@ public class Ajax {
 //		String postXml = args==null ? null : ("<request>" + objectToXml(args, null) + "</request>");		
 		String postXml = args==null ? null : (objectToXml(args, null));	
 		
-//		ScriptJava.alertWindow(postXml);
+//		StrictWeb.alertWindow(postXml);
 		
 		final Node[] eventTargetNodes = new Node[3];
 		
 		eventTargetDisable(eventTargetNodes);
 		
 		if(async) {
-			ScriptJava.setVoidEventCallback(request, EV_ONREADYSTATECHANGE, new VoidDelegate<XMLHttpRequest>() {
+			StrictWeb.setVoidEventCallback(request, EV_ONREADYSTATECHANGE, new VoidDelegate<XMLHttpRequest>() {
 				public void voidDelegate(XMLHttpRequest r) {
 //					Log.info("<b>readyState</b> = " + r.readyState);
 					if(r.readyState == 4) callBack.voidDelegate(parseRequestResult(r, url, method, eventTargetNodes, errorHandler));
@@ -123,11 +124,11 @@ public class Ajax {
 			Log.debug(responseText);
 			
 			try {
-//				ScriptJava.alertWindow(responseText);
+//				StrictWeb.alertWindow(responseText);
 				if(responseText.charAt(0) == 'v') {
-					result = (AjaxRequestResult) ScriptJava.evalFunction(responseText + "\nreturn o._a;");					
+					result = (AjaxRequestResult) StrictWeb.evalFunction(responseText + "\nreturn o._a;");					
 				} else {
-					result = (AjaxRequestResult) ScriptJava.evalFunction("return " + responseText);
+					result = (AjaxRequestResult) StrictWeb.evalFunction("return " + responseText);
 				}
 			}catch(Throwable e) {
 				throwError("Ajax.syncCall("+method+"): eval error", e, eventTargetNodes, errorHandler);
@@ -160,10 +161,10 @@ public class Ajax {
 	}
 	
 	private static void eventTargetDisable(Node[] eventTargetNodes) {
-		DOMEvent ev = ScriptJava.globalEvent;
-//		ScriptJava.alertWindow(ev);
+		DOMEvent ev = StrictWeb.globalEvent;
+//		StrictWeb.alertWindow(ev);
 
-		Node el = ScriptJava.swTarget;
+		Node el = StrictWeb.swTarget;
 		if(el==null) {
 		    if(null==ev) return;
 		    el = ev.target;
@@ -180,10 +181,10 @@ public class Ajax {
 		// loading
 		eventTargetNodes[2] = (
 			null != DEFAULT_LOADING_IMG ? 
-				ScriptJava.EL("span").styleDisplay("inline-block")
+				StrictWeb.EL("span").styleDisplay("inline-block")
 				    .styleWidth(el.offsetWidth+"px").styleHeight(el.offsetHeight+"px")
 				    .styleBackground("center center no-repeat url(" + Ajax.DEFAULT_LOADING_IMG + ")")
-				: ScriptJava.EL("span").text("loading...")
+				: StrictWeb.EL("span").text("loading...")
 			).node;
 		
 		
@@ -213,7 +214,7 @@ public class Ajax {
 		}
 		
 		nativeJsThrow(th);
-//		ScriptJava.alertWindow(type + " \n " + message);
+//		StrictWeb.alertWindow(type + " \n " + message);
 	}
 
 	@NativeCode("{throw th;}")
@@ -222,16 +223,16 @@ public class Ajax {
 
 	public static String objectToXml(Object obj, String _id) {
 		String id = (_id!=null?" id=\""+_id+"\"":"");
-		if(ScriptJava.typeOf(obj) == "undefined") return "<null"+id+"/>";
-		if(ScriptJava.typeOf(obj) == "string") return "<s"+id+">"+ScriptJava.toHTML((String)obj)+"</s>";
-		if(ScriptJava.typeOf(obj) == "boolean") return ((Boolean)obj) ? "<b"+id+">1</b>" : "<b"+id+">0</b>";
-		if(ScriptJava.typeOf(obj) == "number") return "<n"+id+">"+obj+"</n>";
-		if(ScriptJava.typeOf(obj) == "object") {
+		if(StrictWeb.typeOf(obj) == "undefined") return "<null"+id+"/>";
+		if(StrictWeb.typeOf(obj) == "string") return "<s"+id+">"+StrictWeb.toHTML((String)obj)+"</s>";
+		if(StrictWeb.typeOf(obj) == "boolean") return ((Boolean)obj) ? "<b"+id+">1</b>" : "<b"+id+">0</b>";
+		if(StrictWeb.typeOf(obj) == "number") return "<n"+id+">"+obj+"</n>";
+		if(StrictWeb.typeOf(obj) == "object") {
 			if(obj == null) return "<null"+id+"/>";
-			if(ScriptJava.isEnum(obj)) return "<e"+id+">"+obj.toString()+"</e>";
-			if(ScriptJava.isInstanceOfDate(obj)) return "<d"+id+">"+ScriptJava.dateToStringSmart((Date)obj)+"</d>"; 
-			if(ScriptJava.isInstanceOfArray(obj)) return arrayToXml((Object[])obj, id); 
-			if(ScriptJava.isInstanceOfNode(obj)) {
+			if(StrictWeb.isEnum(obj)) return "<e"+id+">"+obj.toString()+"</e>";
+			if(StrictWeb.isInstanceOfDate(obj)) return "<d"+id+">"+StrictWeb.dateToStringSmart((Date)obj)+"</d>"; 
+			if(StrictWeb.isInstanceOfArray(obj)) return arrayToXml((Object[])obj, id); 
+			if(StrictWeb.isInstanceOfNode(obj)) {
 //				return (_id!=null?"<form"+id+">":"")
 //					+ formToXml((Node)obj)
 //					+ (_id!=null?"</form>":"");
@@ -241,13 +242,13 @@ public class Ajax {
 			String xml = "<o"+id+">";
 			for(String key : map.keySet()) {
 				String val = map.get(key);
-				if(ScriptJava.typeOf(val) != "function")
+				if(StrictWeb.typeOf(val) != "function")
 					xml += objectToXml(val, key);
 			}
 			return xml+"</o>";
 		}
 		
-		return "<"+ScriptJava.typeOf(obj) + "/>";
+		return "<"+StrictWeb.typeOf(obj) + "/>";
 	}
 
 	public static String formToXml(Node start) {
@@ -256,7 +257,7 @@ public class Ajax {
 		if(start.field == DOMBuilder.DISABLED) return xml;
 		
 		if(start.field != null) {
-			if(ScriptJava.typeOf(start.field) == "string") {
+			if(StrictWeb.typeOf(start.field) == "string") {
 				xml = "<f id=\"" + start.field + "\">";
 			} else xml = "<f>";
 		}
@@ -269,7 +270,7 @@ public class Ajax {
 				xml += "<f id=\"" + (el.id!=""?el.id:el.name) + "\">";
 				
 				if(el.type == "checkbox") xml += el.checked ? "1" : "0";
-				else xml += ScriptJava.toHTML((String)el.value);
+				else xml += StrictWeb.toHTML((String)el.value);
 				
 				xml += "</f>";
 				
@@ -284,7 +285,7 @@ public class Ajax {
 				
 				xml += "<ms id=\"" + (el.id!=null?el.id:el.name) + "\">"
 				+ (val.size() > 0 ? "<q>" : "")
-				+ ScriptJava.listJoin(val, "</q><q>")
+				+ StrictWeb.listJoin(val, "</q><q>")
 				+ (val.size() > 0 ? "</q>" : "")				
 				+ "</ms>";
 			} else xml += formToXml(el);
@@ -296,24 +297,19 @@ public class Ajax {
 	}
 
 	private static String arrayToXml(Object[] a, String id) {
-//		ScriptJava.window.alert("arrayToXml: " + a + " :: " + a.length);
+//		StrictWeb.window.alert("arrayToXml: " + a + " :: " + a.length);
 		String xml = "<a"+id+">";
 		for(int i=0; i < a.length; i++) {
-			if(ScriptJava.typeOf(a[i]) != "function")
+			if(StrictWeb.typeOf(a[i]) != "function")
 				xml += objectToXml(a[i], null);
 		}
 		return xml + "</a>";
 	}
 
-//	public static void validate(Object args, ValidatorHelperBase validator) {
-//		if(null == args || null == validator) return;
-//		
-//	}
-
 	/**
-	 * Use this method to append all Ajax specific classes to ScriptJava compier 
+	 * Use this method to append all Ajax specific classes to StrictWeb compier 
 	 */
-	@NativeCode("{}")
+	@Native
 	public static void prepareCompiler(Compiler compiler) throws Exception {
 		compiler
 		.addPlugin(new EntityCompilerPlugin())
