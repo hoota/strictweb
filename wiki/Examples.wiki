@@ -1,6 +1,6 @@
 == More Simple Examples ==
 
- * DOM Elements builder
+* DOM Elements builder
 {{{
 // extending from CommonElements just for quick access to some methods
 public class FirstDiv extends CommonElements {
@@ -23,7 +23,7 @@ public class FirstDiv extends CommonElements {
 }
 }}}
 
- * Timer
+* Timer
 {{{
 /** extends from CommonElements only for simplier access to static fields and methods */
 public class Timer extends CommonElements {
@@ -74,6 +74,69 @@ public class EventExample extends CommonElements implements DOMEventCallback {
     static {
         document.body.appendChild(EL("h2").text(ajaxName(EventExample.class) + " example").node);
         document.body.appendChild(new EventExample().draw().node);
+    }
+}
+}}}
+
+* Table and Times example
+{{{
+public class TableTimerExample extends CommonElements {
+    static {
+        document.body.appendChild(EL("h2").text(ajaxName(TableTimerExample.class) + " example").node);
+        document.body.appendChild(new TableTimerExample().draw().node);
+    }
+
+    int n = 0;
+
+    private NodeBuilder draw() {
+        final TableInnerNodeBuilder tbody = $TBODY();
+
+        setInterval(new VoidDelegate<IntervalIdentifier>() {
+            public void voidDelegate(IntervalIdentifier intervalId) {
+                n++;
+                tbody.add($TR()
+                    .add($TD().text("" + n))
+                    .add($TD().text(dateToStringSmart(new Date())))
+                );
+
+                if(n >= 100) clearInterval(intervalId);
+            }
+        }, 1000);
+
+        return $DIV().style("maxHeight", "200px").styleOverflow("auto")
+        .add(
+            $TABLE().border(1)
+            .add(
+                $THEAD().add(
+                    $TR().TDH("#").TDH("Date & Time")
+                )
+            ).add(tbody)
+        )
+        ;
+    }
+}
+}}}
+
+=== Compiler ===
+To compile all these examples, we can use one java class
+{{{
+public class SimplesCompiler extends CommonCompiler {	
+    @Override
+    public void addToCompiler(Compiler compiler) throws Exception {
+        compiler
+        .parseClass(HelloWorld.class)
+        .parseClass(FirstDiv.class)
+        .parseClass(Timer.class)
+        .parseClass(EventExample.class)
+        .parseClass(TableTimerExample.class)
+        ;
+    }
+
+    public static void main(String[] args) throws Exception {
+        new SimplesCompiler()
+        .setJsGenPath("src/java/ru/yandex/strictweb/example/www-root/simples.js")
+        .setBasePath("src/java/")
+        .build(args);
     }
 }
 }}}
