@@ -26,7 +26,7 @@ public class HelloWorldCompiler extends CommonCompiler {
         new Compiler().build(args);
     }
 }
-
+}}}
 А запускать это компилятор надо вот с какими параметрами:
 
 java -cp ... HelloWorldCompiler -basePath ../Market/svn-market/libraries/trunk/strict-web/src/java/
