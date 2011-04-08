@@ -1,0 +1,55 @@
+== Hello, World! ==
+{{{
+public class HelloWorld {
+    static {
+        ScriptJava.window.alert("Hello, World!");
+    }
+}
+}}}
+
+После компиляции (о чем написано ниже), включения полученного .js файла на html страничку и открытия её в браузере вы скорее всего увидите окошко с "Hello, World!"
+Компиляция  
+
+Компиляция это процесс запуска Java программы. Компилятор - это java программа, в которой перечисленны java классы, которые нужно скомпилить.
+Вот пример, который скомпилит HelloWorld:
+
+{{{
+public class HelloWorldCompiler extends CommonCompiler {	
+    @Override
+    public void addToCompiler(Compiler compiler) throws Exception {
+        compiler
+            .setPathPrefix("src/")
+            .parseClass(HelloWorld.class);
+    }
+
+    public static void main(String[] args) throws Exception {
+        new Compiler().build(args);
+    }
+}
+
+А запускать это компилятор надо вот с какими параметрами:
+
+java -cp ... HelloWorldCompiler -basePath ../Market/svn-market/libraries/trunk/strict-web/src/java/
+
+Параметр запуска basePath - это путь к тому месту, где лежат исходники strict-web, потому что во время компиляции они читаются
+
+Поскольку наш пример - это всего одни java класс, то вы найдете только один вызов метода parseClass, а если классов будет много (как в gurulight)
+то вызовов будет много.
+
+
+В результате в конце сгенерированного файла (имя по умолчанию generated.js) вы сможете увидеть:
+
+{
+ScriptJava.window.alert('Hello, World!');
+}
+
+Из чего можно сделать вот какой вывод: *точка входа программы - это статические конструкторы классов*
+Выполняются они в то же порядке, в котором перечислены при компиляции
+
+
+Если вам надо результирующий файл положить куда-то именно, то запускать компилятор можно с опцией -jsGenPath
+Hint: в качестве пути, можно указать Samba-путь на сервер, например -jsGenPath //asgard/hoota/www/mbo/gurulight/generated.js
+
+== Примеры ==
+
+Все примеры так же можно найти в пакете. Или [SimpleExamples тут]
