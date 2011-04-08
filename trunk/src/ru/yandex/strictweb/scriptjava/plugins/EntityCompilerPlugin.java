@@ -12,7 +12,7 @@ import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 
 import ru.yandex.strictweb.ajaxtools.annotation.AjaxTransient;
 import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
-import ru.yandex.strictweb.scriptjava.base.ScriptJava;
+import ru.yandex.strictweb.scriptjava.base.StrictWeb;
 import ru.yandex.strictweb.scriptjava.compiler.CompilerPlugin;
 import ru.yandex.strictweb.scriptjava.compiler.IgnoreExtends;
 import ru.yandex.strictweb.scriptjava.compiler.ParsedClass;
@@ -102,7 +102,7 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 		if(null!=cl.type.getExtendsClause()) {
 			String superType = cl.type.getExtendsClause().toString();			
 			if(!parser.hasAnnotation(IgnoreExtends.class.getSimpleName(), cl.type.getModifiers()) && !parser.classes.get(superType).isNative) {
-				parser.code.append(parser.getObfuscatedName(ScriptJava.class.getSimpleName())+"."+parser.getObfuscatedName("extend") + "("+cl.name+".prototype, "+superType+".prototype)\n");
+				parser.code.append(parser.getObfuscatedName(StrictWeb.class.getSimpleName())+"."+parser.getObfuscatedName("extend") + "("+cl.name+".prototype, "+superType+".prototype)\n");
 			}
 		}		
 		

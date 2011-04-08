@@ -62,6 +62,7 @@ import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo;
 import ru.yandex.strictweb.scriptjava.base.ExtendsNative;
 import ru.yandex.strictweb.scriptjava.base.Native;
 import ru.yandex.strictweb.scriptjava.base.NativeCode;
+import ru.yandex.strictweb.scriptjava.base.StrictWeb;
 import ru.yandex.strictweb.scriptjava.plugins.EntityCompilerPlugin;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_5)
@@ -804,7 +805,7 @@ public class Parser implements CompilerPlugin {
 	Pattern ajaxNamePattern = Pattern.compile("([^\\.]+)$");
 	
     private boolean checkForAjaxNameMagicMethod(String mName, ParsedClass cl, StringBuilder code, List<JCExpression> arguments) {
-        if (!cl.name.equals("JSObject") || !mName.equals("ajaxName") || arguments.size() != 1)
+        if (!cl.name.equals(StrictWeb.class.getSimpleName()) || !mName.equals("ajaxName") || arguments.size() != 1)
             return false;
 
         while ('.' == code.charAt(code.length() - 1) || Character.isJavaIdentifierPart(code.charAt(code.length() - 1))) {
@@ -997,7 +998,7 @@ public class Parser implements CompilerPlugin {
 	}
 
 	public void specialInvocationMethodMath_rint(JCMethodInvocation inv) {
-		throw new RuntimeException("Use ScriptJava.round2");
+		throw new RuntimeException("Use StrictWeb.round2");
 //		code.append("round2");
 //		parseArguments("(", inv.getArguments(), ")");
 //		currentType = VarType.NUMBER;
@@ -1315,14 +1316,14 @@ public class Parser implements CompilerPlugin {
 			superType = new VarType(cl.type.getExtendsClause()).getName();
 			//System.out.println(superType+"="+classes.get(superType).isNative);
 			if(!classes.get(superType).isNative) {
-				code.append(getObfuscatedName("ScriptJava")+"."+getObfuscatedName("extend")+"("+getObfuscatedName(cl.name)+", "+getObfuscatedName(superType)+");\n");
-				code.append(getObfuscatedName("ScriptJava")+"."+getObfuscatedName("extend")+"("+getObfuscatedName(cl.name)+".prototype, "+getObfuscatedName(superType)+".prototype);\n");
+				code.append(getObfuscatedName(StrictWeb.class.getSimpleName())+"."+getObfuscatedName("extend")+"("+getObfuscatedName(cl.name)+", "+getObfuscatedName(superType)+");\n");
+				code.append(getObfuscatedName(StrictWeb.class.getSimpleName())+"."+getObfuscatedName("extend")+"("+getObfuscatedName(cl.name)+".prototype, "+getObfuscatedName(superType)+".prototype);\n");
 			}
 			
 			try {
 				superType = getAnnotationValue(ExtendsNative.class.getSimpleName(), cl.type.getModifiers());
-				code.append(getObfuscatedName("ScriptJava")+"."+getObfuscatedName("extend")+"("+getObfuscatedName(cl.name)+", "+superType+");\n");
-				code.append(getObfuscatedName("ScriptJava")+"."+getObfuscatedName("extend")+"("+getObfuscatedName(cl.name)+".prototype, "+superType+".prototype);\n");				
+				code.append(getObfuscatedName(StrictWeb.class.getSimpleName())+"."+getObfuscatedName("extend")+"("+getObfuscatedName(cl.name)+", "+superType+");\n");
+				code.append(getObfuscatedName(StrictWeb.class.getSimpleName())+"."+getObfuscatedName("extend")+"("+getObfuscatedName(cl.name)+".prototype, "+superType+".prototype);\n");				
 			} catch(RuntimeException e) {
 			}			
 		}
@@ -1513,7 +1514,7 @@ public class Parser implements CompilerPlugin {
 			String ip = indentPrefix;
 			if(debugLevel > 0) indentPrefix += "\t";
 			if(null == claz || !claz.isInterface) {
-				code.append(getObfuscatedName("ScriptJava")+"."+getObfuscatedName("extend")+"(new " + getObfuscatedName(type.getName()));
+				code.append(getObfuscatedName(StrictWeb.class.getSimpleName())+"."+getObfuscatedName("extend")+"(new " + getObfuscatedName(type.getName()));
 				parseArguments("(", node.getArguments(), ")");
 				code.append(", {");
 			} else code.append("{");

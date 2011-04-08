@@ -4,33 +4,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import ru.yandex.strictweb.scriptjava.compiler.CompilerPlugin;
-import ru.yandex.strictweb.scriptjava.compiler.ParsedClass;
-import ru.yandex.strictweb.scriptjava.compiler.Parser;
-import ru.yandex.strictweb.scriptjava.compiler.VarType;
-
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 
+import ru.yandex.strictweb.ajaxtools.annotation.AjaxServiceHelper;
+import ru.yandex.strictweb.scriptjava.base.StrictWeb;
+import ru.yandex.strictweb.scriptjava.base.ajax.Ajax;
+import ru.yandex.strictweb.scriptjava.compiler.CompilerPlugin;
+import ru.yandex.strictweb.scriptjava.compiler.ParsedClass;
+import ru.yandex.strictweb.scriptjava.compiler.Parser;
+import ru.yandex.strictweb.scriptjava.compiler.VarType;
+
 public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
-	protected String AJAX_SERVICE_HELPER_ANNOTATION;
 	Parser parser;
 	Map<String, Boolean> knownClasses = new TreeMap<String, Boolean>();
 	
-	private String ajaxSyncCallClass = "Ajax";
+	private Class<?> ajaxServiceHelperAnnotation = AjaxServiceHelper.class;
+	private String ajaxSyncCallClass = Ajax.class.getSimpleName();
 	private String ajaxSyncCallMethod = "syncCall";
-	
-	public AjaxServiceHelperCompilerPlugin() {
-		AJAX_SERVICE_HELPER_ANNOTATION = "AjaxServiceHelper";
-	}
 	
 	private boolean isAjaxServiceClass(ParsedClass cl) {
 		if(cl.type==null) return false;
 		if(knownClasses.containsKey(cl.name)) return knownClasses.get(cl.name);
 		
-		boolean res = parser.hasAnnotation(AJAX_SERVICE_HELPER_ANNOTATION, cl.type.getModifiers());
+		boolean res = parser.hasAnnotation(ajaxServiceHelperAnnotation.getSimpleName(), cl.type.getModifiers());
 		knownClasses.put(cl.name, res);
 		return res;
 	}
@@ -49,14 +48,26 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 			if(parser.isAbstract(m.getModifiers()) || parser.isStatic(m.getModifiers()) || !isAjax) continue;
 			String clName = cl.name;
 			clName = Character.toLowerCase(cl.name.charAt(0)) + clName.substring(1);
-			parser.code.append(parser.getObfuscatedName(cl.name) + ".prototype." + parser.getObfuscatedName(mName) + " = function (params, callback, eh) {" +
-				"\n\treturn "+parser.getObfuscatedName(ajaxSyncCallClass) + "." + parser.getObfuscatedName(ajaxSyncCallMethod)+
-				"('"+clName+"', '"+mName+"', params, callback, eh);\n}\n");
-//			compiler.code.append(cl.name + ".prototype." + mName + " = function ");
-//			compiler.parseParameters("(", m.parameters(), ")");
-//			compiler.code.append(" {\n\treturn ajaxSyncCall('"+cl.name+"', ");
-//			compiler.parseParameters("[", m.parameters(), "]");			
-//			compiler.code.append(");\n}\n");
+			
+			String params = parser.getObfuscatedName("params");
+            String callback = parser.getObfuscatedName("callback");
+            String errorHandler = parser.getObfuscatedName("errorHandler");
+            
+            if(parser.obfuscate) {
+                parser.code.append(parser.getObfuscatedName(cl.name) + ".prototype." + parser.getObfuscatedName(mName)
+                    + "=function(" + params+","+callback+","+errorHandler + "){return "
+                    + parser.getObfuscatedName(ajaxSyncCallClass) + "." + parser.getObfuscatedName(ajaxSyncCallMethod)
+                    + "('"+clName+"','"+mName+"',"+params+","+callback+","+errorHandler
+                    + ");}\n"
+                );                
+            } else {
+                parser.code.append(cl.name + ".prototype." + mName
+                    + " = function(" + params+", "+callback+", "+errorHandler + ") {\n\treturn "
+                    + ajaxSyncCallClass + "." + ajaxSyncCallMethod
+                    + "('"+clName+"', '"+mName+"', "+params+", "+callback+", "+errorHandler
+                    + ");\n}\n"
+                );                
+            }
 		}
 
 		
@@ -65,7 +76,7 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 		if(null!=cl.type.getExtendsClause()) {
 			String superType = cl.type.extending.toString();
 			if(!parser.classes.get(superType).isNative) {
-				parser.code.append(parser.getObfuscatedName("ScriptJava")+"."+parser.getObfuscatedName("extend") +
+				parser.code.append(parser.getObfuscatedName(StrictWeb.class.getSimpleName())+"."+parser.getObfuscatedName("extend") +
 					"("+parser.getObfuscatedName(cl.name)+".prototype, "+parser.getObfuscatedName(superType)+".prototype)\n");
 			}
 		}		
@@ -98,7 +109,7 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 	}
 	
 	private boolean checkForAjaxAsyncCallMagicMethod(String mName, ParsedClass cl, StringBuilder code, List<JCExpression> arguments) {
-		if(!cl.name.equals("JSObject")
+		if(!cl.name.equals(StrictWeb.class.getSimpleName())
 			|| !mName.equals("ajaxAsyncCall")
 			|| arguments.size()!=2) return false;
 		
@@ -119,7 +130,7 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 	}
 	
 	   private boolean checkForAjaxAsyncCallWithErrorsMagicMethod(String mName, ParsedClass cl, StringBuilder code, List<JCExpression> arguments) {
-	        if(!cl.name.equals("JSObject")
+	        if(!cl.name.equals(StrictWeb.class.getSimpleName())
 	            || !mName.equals("ajaxAsyncCallWithErrors")
 	            || arguments.size()!=3) return false;
 	        

@@ -1,7 +1,7 @@
 package ru.yandex.strictweb.scriptjava.base;
 
 @Native
-public class Node extends JSObject {
+public class Node {
 	public DOMEventCallback onclick;
 	public DOMEventCallback onmousedown;
 	public String className;
