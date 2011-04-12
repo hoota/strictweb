@@ -26,7 +26,7 @@ import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo;
 
 public class RePresentation {
 	public static interface EntityFinder {
-		Object find(Class clazz, Object primaryKey);
+		Object find(Class<?> clazz, Object primaryKey);
 	}
 	
 	EntityFinder ef;

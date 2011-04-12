@@ -22,8 +22,6 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 	Map<String, Boolean> knownClasses = new TreeMap<String, Boolean>();
 	
 	private Class<?> ajaxServiceHelperAnnotation = AjaxServiceHelper.class;
-	private String ajaxSyncCallClass = Ajax.class.getSimpleName();
-	private String ajaxSyncCallMethod = "syncCall";
 	
 	private boolean isAjaxServiceClass(ParsedClass cl) {
 		if(cl.type==null) return false;
@@ -32,6 +30,13 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 		boolean res = parser.hasAnnotation(ajaxServiceHelperAnnotation.getSimpleName(), cl.type.getModifiers());
 		knownClasses.put(cl.name, res);
 		return res;
+	}
+	
+	public String ajaxMethodCall() {
+	    return parser.getObfuscatedName(Ajax.class.getSimpleName())
+	        + "." + parser.getObfuscatedName("helper")
+            + "." + parser.getObfuscatedName("call")
+	        ;
 	}
 	
 	public boolean compileClassFieldsAndMethods(ParsedClass cl) {
@@ -56,14 +61,14 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
             if(parser.obfuscate) {
                 parser.code.append(parser.getObfuscatedName(cl.name) + ".prototype." + parser.getObfuscatedName(mName)
                     + "=function(" + params+","+callback+","+errorHandler + "){return "
-                    + parser.getObfuscatedName(ajaxSyncCallClass) + "." + parser.getObfuscatedName(ajaxSyncCallMethod)
+                    + ajaxMethodCall()
                     + "('"+clName+"','"+mName+"',"+params+","+callback+","+errorHandler
                     + ");}\n"
                 );                
             } else {
                 parser.code.append(cl.name + ".prototype." + mName
                     + " = function(" + params+", "+callback+", "+errorHandler + ") {\n\treturn "
-                    + ajaxSyncCallClass + "." + ajaxSyncCallMethod
+                    + ajaxMethodCall()
                     + "('"+clName+"', '"+mName+"', "+params+", "+callback+", "+errorHandler
                     + ");\n}\n"
                 );                
@@ -157,11 +162,4 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 		this.parser = parser;
 	}
 
-	public void setAjaxSyncCallClass(String ajaxSyncCallClass) {
-		this.ajaxSyncCallClass = ajaxSyncCallClass;
-	}
-
-	public void setAjaxSyncCallMethod(String ajaxSyncCallMethod) {
-		this.ajaxSyncCallMethod = ajaxSyncCallMethod;
-	}
 }

@@ -28,36 +28,31 @@ public class Ajax {
 	public static String XML_DATA_PARAM = "xml-data";
 	public static String BEAN_NAME_PARAM = "bean";
 	public static String METHOD_NAME_PARAM = "action";
-	public static String DEFAULT_LOADING_IMG = null;
-
-	public static AjaxUrlFormer defaultUrlFormer = new AjaxUrlFormer() {
-		public String getUrl(String clazz, String method) {
-			return "/ajax";
-		}
-		public String getQueryString(String clazz, String method) {
-			return "_rnd="+Math.random()
-				+"&"+BEAN_NAME_PARAM+"="+clazz
-				+"&"+METHOD_NAME_PARAM+"="+method;
-		}
-	};
+	public static Ajax helper;
 	
-	public static final VoidDelegate<Throwable> baseErrorHandler = new VoidDelegate<Throwable>() {
-		public void voidDelegate(Throwable exc) {
-			if(exc == null) return;
-			Log.error(exc.getMessage());
-			if(exc.getStackTrace() != null) for(StackTraceElement ste : exc.getStackTrace()) {
-				Log.error(" at " + ste.getClassName()+"."+ste.getMethodName()+" : " + ste.getLineNumber());
-			}
-			if(exc.getCause() != null) {
-				Log.error("Caused by:");
-				voidDelegate(exc.getCause());
-			}
-		}
-	};
-	
-	public static VoidDelegate<Throwable> defaultErrorHandler = baseErrorHandler;
+	boolean autoRequest = true;
+	List<AjaxRequest> requestQueue = StrictWeb.newJsList();
 
-	public static XMLHttpRequest getHttpRequest() {
+	public String getRequestUrl(List<AjaxRequest> requests) {
+        return "/ajax";
+    }
+	
+    public String getQueryString(List<AjaxRequest> requests) {
+        String query = "_rnd="+Math.random();
+        
+        for(int i=0; i<requests.size(); i++) {
+            AjaxRequest r = requests.get(i);
+            query += "&" + BEAN_NAME_PARAM+i+"="+r.clazz + "&"+METHOD_NAME_PARAM+i+"="+r.method;
+        }
+        
+        return query;
+    }
+    
+    public String getLoadingImageUrl() {
+        return null;
+    }
+	
+	public XMLHttpRequest getHttpRequest() {
 		if(StrictWeb.window.XMLHttpRequest != null) {
 			return new XMLHttpRequest();
 		}
@@ -65,23 +60,59 @@ public class Ajax {
 		return (XMLHttpRequest)(Object)new ActiveXObject(MICROSOFT_XMLHTTP);
 	}
 	
-	// , ValidatorHelperBase validator, AjaxUrlFormer urlFormer
-	public static Object syncCall(String clazz, final String method, Object args, final VoidDelegate<Object> callBack, final VoidDelegate<Throwable> errorHandler) throws Throwable {
-		defaultErrorHandler.voidDelegate(null);
-		boolean async = callBack != null;
-		Log.info("DOING ASYNC CALL");
-//		validate(args, validator);
-		
-		final XMLHttpRequest request = getHttpRequest();
-		
-//		if(null == urlFormer) urlFormer = defaultUrlFormer;
-		final String url = defaultUrlFormer.getUrl(clazz, method);
-		Log.debug("Request: " + url);
-		
-//		String postXml = args==null ? null : ("<request>" + objectToXml(args, null) + "</request>");		
-		String postXml = args==null ? null : (objectToXml(args, null));	
-		
-//		StrictWeb.alertWindow(postXml);
+	/** this method handles error events. If null is passed - this means reset errors */
+	public void onError(Throwable exception) {
+	    if(exception == null) return;
+	    Log.error(exception.getMessage());
+	    if(exception.getStackTrace() != null) for(StackTraceElement ste : exception.getStackTrace()) {
+	        Log.error(" at " + ste.getClassName()+"."+ste.getMethodName()+" : " + ste.getLineNumber());
+	    }
+	    if(exception.getCause() != null) {
+	        Log.error("Caused by:");
+	        onError(exception.getCause());
+	    }
+	}
+	
+	public void beginBatch() {
+	    autoRequest = false;
+	}
+	
+	public void makeBatchRequests() {
+	    if(requestQueue.size() > 0) {
+	        makeRequest(true, requestQueue);
+	        requestQueue = StrictWeb.newJsList();
+	    }
+	    autoRequest = true;
+	}
+    
+	public Object call(String clazz, final String method, Object args, final VoidDelegate<Object> callBack, final VoidDelegate<Throwable> errorHandler) throws Throwable {
+        if(errorHandler != null) errorHandler.voidDelegate(null); else onError(null);
+        
+        boolean async = callBack != null;
+	    if(!async || autoRequest) {
+	        List<AjaxRequest> requests = StrictWeb.newJsList();
+	        requests.add(new AjaxRequest(clazz, method, args, callBack, errorHandler));
+	        return makeRequest(async, requests);
+	    } else {
+	        requestQueue.add(new AjaxRequest(clazz, method, args, callBack, errorHandler));
+            return null;
+	    }
+    }
+    
+	Object makeRequest(boolean async, final List<AjaxRequest> requests) {
+	    onError(null);
+	    
+        XMLHttpRequest request = getHttpRequest();
+        String postXml = "";
+        
+        for(int i=0; i<requests.size(); i++) {
+            AjaxRequest r = requests.get(i);
+	        if(r.errorHandler != null) r.errorHandler.voidDelegate(null);
+	        postXml += "&"+XML_DATA_PARAM+i+"="
+	            + objectToXml(r.args, null).replaceAll("%", "%25").replaceAll("&", "%26").replaceAll(";", "%3B").replaceAll("\\+", "%2B");
+	    }
+	   
+		final String url = getRequestUrl(requests);
 		
 		final Node[] eventTargetNodes = new Node[3];
 		
@@ -89,80 +120,99 @@ public class Ajax {
 		
 		if(async) {
 			StrictWeb.setVoidEventCallback(request, EV_ONREADYSTATECHANGE, new VoidDelegate<XMLHttpRequest>() {
-				public void voidDelegate(XMLHttpRequest r) {
-//					Log.info("<b>readyState</b> = " + r.readyState);
-					if(r.readyState == 4) callBack.voidDelegate(parseRequestResult(r, url, method, eventTargetNodes, errorHandler));
+				public void voidDelegate(XMLHttpRequest request) {
+					if(request.readyState == 4) {
+					    AjaxRequestResult[] results = parseRequestResult(request, url, eventTargetNodes, requests);
+					    for(int i=0; i<results.length; i++) {
+					        AjaxRequestResult res = results[i];
+                            AjaxRequest req = requests.get(i);
+					        Throwable error = res.getError();
+					        if(error != null) {
+					            throwError("Ajax.call("+req.method+"): server-side exception"
+					                , error
+					                , eventTargetNodes
+					                , req.errorHandler
+					            );
+					        } else {
+					            req.callBack.voidDelegate(res.data);
+					        }
+					    }
+					}
 				}
 			});
 		}
 		
-		if(null == postXml) {
-			request.open("GET", url, async, null, null);
-			request.send(null);
-		} else {
-			postXml = defaultUrlFormer.getQueryString(clazz, method) + "&"+XML_DATA_PARAM+"=" + postXml.replaceAll("%", "%25").replaceAll("&", "%26").replaceAll(";", "%3B").replaceAll("\\+", "%2B");
-			Log.debug(postXml);
-			request.open("POST", url, async, null, null);
-//			request.setRequestHeader("Connection", "close");
-			request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-//			request.setRequestHeader("Content-length", postXml.length()+"");
-			request.send(postXml);
-		}
+		postXml = getQueryString(requests) + postXml;
+		request.open("POST", url, async, null, null);
+		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		request.send(postXml);
+		
+		if(async) return null;
 				
-		return async ? null : parseRequestResult(request, url, method, eventTargetNodes, errorHandler);
+		// doing sync parse
+		AjaxRequestResult res = parseRequestResult(request, url, eventTargetNodes, requests)[0];
+		AjaxRequest req = requests.get(0);
+		Throwable error = res.getError();
+		if(error != null) {
+            throwError("Ajax.call("+req.method+"): server-side exception"
+                , error
+                , eventTargetNodes
+                , req.errorHandler
+            );
+        }
+        return res.data;
 	}
 
-	private static Object parseRequestResult(XMLHttpRequest request, String url, String method, Node[] eventTargetNodes, VoidDelegate<Throwable> errorHandler) {
+	private AjaxRequestResult[] parseRequestResult(XMLHttpRequest request, String url, Node[] eventTargetNodes, List<AjaxRequest> requests) {
 		long status = request.status;
 		String responseText = request.responseText;
 		String statusText = request.statusText;
 		request = null;
-		AjaxRequestResult result = null;
+		AjaxRequestResult[] result = null;
 		
 		if (status == 200) {
-			Log.debug("<br><b>results:</b>");
-			Log.debug(responseText);
-			
 			try {
-//				StrictWeb.alertWindow(responseText);
 				if(responseText.charAt(0) == 'v') {
-					result = (AjaxRequestResult) StrictWeb.evalFunction(responseText + "\nreturn o._a;");					
+					result = (AjaxRequestResult[]) StrictWeb.evalFunction(responseText + "\nreturn o._a;");					
 				} else {
-					result = (AjaxRequestResult) StrictWeb.evalFunction("return " + responseText);
+					result = (AjaxRequestResult[]) StrictWeb.evalFunction("return " + responseText);
 				}
 			}catch(Throwable e) {
-				throwError("Ajax.syncCall("+method+"): eval error", e, eventTargetNodes, errorHandler);
+				throwError("Ajax.call("+getMethodsNames(requests)+"): eval error", e, eventTargetNodes, null);
 			}
 		} else {
-			throwError("Ajax.syncCall("+method+"): http error:\n" +
+			throwError("Ajax.call("+getMethodsNames(requests)+"): http error:\n" +
 				"URL: "+url+"\nCode: "+status+"\nMessage: "+statusText
 				, null
 				, eventTargetNodes
-				, errorHandler
+				, null
 			);
 		}
 		
 		if(result == null) {
-			throwError("Ajax.syncCall("+method+"): result is null: " + responseText, null, eventTargetNodes, errorHandler);
+			throwError("Ajax.call("+getMethodsNames(requests)+"): result is null: " + responseText, null, eventTargetNodes, null);
 		}
 		
-		Throwable error = result.getError();
-		if(error != null) {
-			throwError("Ajax.syncCall("+method+"): server-side exception"
-					, error
-					, eventTargetNodes
-					, errorHandler
-			);
-		}
-
+        if(result.length != requests.size()) {
+            throwError("Ajax.call("+getMethodsNames(requests)+"): results count in not equal requests count: " + result.length +"!=" + requests.size(), null, eventTargetNodes, null);
+        }
+		
 		eventTargetEnable(eventTargetNodes);
 		
-		return result.getData();
+		return result;
 	}
 	
-	private static void eventTargetDisable(Node[] eventTargetNodes) {
+	public String getMethodsNames(List<AjaxRequest> requests) {
+	    String methods = "";
+	    for(int i=0; i<requests.size(); i++) {
+            AjaxRequest r = requests.get(i);
+            methods += (i>0?",":"") + r.method;
+	    }
+	    return methods;
+	}
+	
+	void eventTargetDisable(Node[] eventTargetNodes) {
 		DOMEvent ev = StrictWeb.globalEvent;
-//		StrictWeb.alertWindow(ev);
 
 		Node el = StrictWeb.swTarget;
 		if(el==null) {
@@ -179,11 +229,12 @@ public class Ajax {
 		// parent
 		eventTargetNodes[1] = el.parentNode;
 		// loading
+		String loadingImgUrl = getLoadingImageUrl();
 		eventTargetNodes[2] = (
-			null != DEFAULT_LOADING_IMG ? 
+			null != loadingImgUrl ? 
 				StrictWeb.EL("span").styleDisplay("inline-block")
 				    .styleWidth(el.offsetWidth+"px").styleHeight(el.offsetHeight+"px")
-				    .styleBackground("center center no-repeat url(" + Ajax.DEFAULT_LOADING_IMG + ")")
+				    .styleBackground("center center no-repeat url(" + loadingImgUrl + ")")
 				: StrictWeb.EL("span").text("loading...")
 			).node;
 		
@@ -192,9 +243,8 @@ public class Ajax {
 		eventTargetNodes[1].removeChild(eventTargetNodes[0]);
 	}
 	
-	private static void eventTargetEnable(Node[] eventTargetNodes) {
+	void eventTargetEnable(Node[] eventTargetNodes) {
 		if(null == eventTargetNodes || eventTargetNodes.length!=3) return;
-//		if(null==eventTarget || eventTargetParent==null || eventTargetLoading==null) return;
 		
 		eventTargetNodes[1].insertBefore(eventTargetNodes[0], eventTargetNodes[2]);
 		eventTargetNodes[1].removeChild(eventTargetNodes[2]);
@@ -202,19 +252,16 @@ public class Ajax {
 		eventTargetNodes[0] = eventTargetNodes[1] = eventTargetNodes[2] = null;
 	}
 	
-	static void throwError(String shortMsg, Throwable th, Node[] eventTargetNodes, VoidDelegate<Throwable> errorHandler) {
+	void throwError(String shortMsg, Throwable th, Node[] eventTargetNodes, VoidDelegate<Throwable> errorHandler) {
 		eventTargetEnable(eventTargetNodes);
 
 		if(th == null) th = new JsException(shortMsg);
 		
 		if(errorHandler != null) {
 		    errorHandler.voidDelegate(th);
-		} else if(defaultErrorHandler != null) {
-			defaultErrorHandler.voidDelegate(th);
+		} else {
+		    onError(th);
 		}
-		
-		nativeJsThrow(th);
-//		StrictWeb.alertWindow(type + " \n " + message);
 	}
 
 	@NativeCode("{throw th;}")
@@ -233,9 +280,6 @@ public class Ajax {
 			if(StrictWeb.isInstanceOfDate(obj)) return "<d"+id+">"+StrictWeb.dateToStringSmart((Date)obj)+"</d>"; 
 			if(StrictWeb.isInstanceOfArray(obj)) return arrayToXml((Object[])obj, id); 
 			if(StrictWeb.isInstanceOfNode(obj)) {
-//				return (_id!=null?"<form"+id+">":"")
-//					+ formToXml((Node)obj)
-//					+ (_id!=null?"</form>":"");
                 return "<form"+id+">" + formToXml((Node)obj) + "</form>";
 			}
 			Map<String, String> map = (Map<String, String>) obj;
@@ -296,8 +340,7 @@ public class Ajax {
 		return xml;
 	}
 
-	private static String arrayToXml(Object[] a, String id) {
-//		StrictWeb.window.alert("arrayToXml: " + a + " :: " + a.length);
+	public static String arrayToXml(Object[] a, String id) {
 		String xml = "<a"+id+">";
 		for(int i=0; i < a.length; i++) {
 			if(StrictWeb.typeOf(a[i]) != "function")
@@ -316,11 +359,11 @@ public class Ajax {
 		.addPlugin(new AjaxServiceHelperCompilerPlugin())
 		
 		.parseClass(AjaxException.class)
+		.parseClass(AjaxRequest.class)
 		.parseClass(AjaxRequestResult.class)
 		.parseClass(ActiveXObject.class)
 		.parseClass(Log.class)
 		.parseClass(XMLHttpRequest.class)
-		.parseClass(AjaxUrlFormer.class)
 		.parseClass(Ajax.class);
 	}
 }
