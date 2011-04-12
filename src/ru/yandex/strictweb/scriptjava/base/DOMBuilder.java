@@ -93,14 +93,6 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		return (S)this;
 	}
 
-//	@NativeCode("{if(null!=c) {" +
-//			" var n = this.node;" +
-//			" var f = isIE && n.ownerDocument && __fixIEChecked2_Checked;" +
-//			" if(!c.nodeName) n.appendChild(document.createTextNode(c)); else {" +
-//			"  if(f) __fixIEChecked2_Checked(c);" +
-//			"  n.appendChild(c);" +
-//			"  if(f) __fixIE_Checked2Checked(c);" +
-//			"}} return this;}")
 	final public S append(C c) {
 		if(c != null) {
 			node.appendChild(c.nodeName == null ? StrictWeb.document.createTextNode(c): c);

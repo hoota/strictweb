@@ -10,6 +10,8 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -66,7 +68,7 @@ public class AjaxService extends HttpServlet {
 		String view = request.getParameter("view");
 		
 		Presentation p = null;
-		if(view!=null) {
+		if(view != null) {
 			if(view.equals("xml")) {
 				response.setContentType("application/xml");
 				p = new XmlPresentation();
@@ -74,7 +76,9 @@ public class AjaxService extends HttpServlet {
 				response.setContentType("text/plain");
 				p = new JsonParanoidPresentation();				
 			}
-		} else {
+		}
+		
+		if(p == null) {
 			response.setContentType("text/plain");
 			p = new JsonRefPresentation();
 		}
@@ -83,7 +87,7 @@ public class AjaxService extends HttpServlet {
 	}
 	
 	
-	Object[] getParams(RePresentation.EntityFinder ef, Method method, HttpServletRequest request) throws Exception {
+	Object[] getParams(int index, RePresentation.EntityFinder ef, Method method, HttpServletRequest request) throws Exception {
 		int nParams = method.getParameterTypes().length;
 		if(nParams == 0) return null;
 		
@@ -93,7 +97,7 @@ public class AjaxService extends HttpServlet {
 		Object[] params = new Object[nParams];
 		Document doc = null;
 		
-		doc = newDocument(request.getParameter(Ajax.XML_DATA_PARAM));
+		doc = newDocument(request.getParameter(Ajax.XML_DATA_PARAM+index));
 		
 		RePresentation rep = new RePresentation(ef);			
 
@@ -135,30 +139,40 @@ public class AjaxService extends HttpServlet {
 			response.setCharacterEncoding("utf-8");
 			
 			Presentation present = getPresentation(request, response);
-			AjaxRequestResult result = new AjaxRequestResult();
+			List<AjaxRequestResult> results = new ArrayList<AjaxRequestResult>();
 			
-			try {				
-				final EntityManager em = orm == null ? null : orm.get();
-				
-				doAction(new RePresentation.EntityFinder() {
-					public Object find(Class clazz, Object primaryKey) {
-					    if(em == null) return createFakeEntity(clazz, primaryKey);
-						return em.find(clazz, primaryKey);
-					}
-				}, request, result);
-				
-				if(orm != null) orm.commit();
-
-			}catch(Throwable e) {
-				e.printStackTrace();
-				if(null!=orm) orm.rollback();
-				result.setError(e);
+			if(authorityProvider != null) {
+			    authorityProvider.checkRequest(request);
 			}
-
-            if(result.getData() != AjaxRequestResult.NO_DATA) {
-                response.getWriter().print(present.toString(result));
-            }
-
+			
+			for(int i=0;;i++) {
+			    AjaxRequestResult result = new AjaxRequestResult();
+			    
+    			try {				
+    				final EntityManager em = orm == null ? null : orm.get();
+    				
+    				
+    				RePresentation.EntityFinder ef = new RePresentation.EntityFinder() {
+    					public Object find(Class clazz, Object primaryKey) {
+    					    if(em == null) return createFakeEntity(clazz, primaryKey);
+    						return em.find(clazz, primaryKey);
+    					}
+    				};
+    				
+                    if(!doAction(i, ef, request, result)) break;
+    				
+    				if(orm != null) orm.commit();
+    
+    			}catch(Throwable e) {
+    				e.printStackTrace();
+    				if(null!=orm) orm.rollback();
+    				result.setError(e);
+    			}
+    			
+    			results.add(result);
+			}
+			
+			response.getWriter().print(present.toString(results));
 		}catch(Throwable e) {
 			e.printStackTrace();
 			if(null!=orm) orm.rollback();
@@ -174,7 +188,7 @@ public class AjaxService extends HttpServlet {
 	}
 
     /** Creates a fake entity */
-	protected Object createFakeEntity(Class clazz, Object primaryKey) {
+	protected Object createFakeEntity(Class<?> clazz, Object primaryKey) {
 	    try {
 	        Object ins = clazz.newInstance();
 	        for(Field f: clazz.getFields()) {
@@ -189,9 +203,10 @@ public class AjaxService extends HttpServlet {
 	    }
     }
 
-    protected void doAction(RePresentation.EntityFinder ef, HttpServletRequest request, AjaxRequestResult result) throws Throwable {
-		String beanName = request.getParameter(Ajax.BEAN_NAME_PARAM);
-		String methodName = request.getParameter(Ajax.METHOD_NAME_PARAM);
+    protected boolean doAction(int index, RePresentation.EntityFinder ef, HttpServletRequest request, AjaxRequestResult result) throws Throwable {
+		String beanName = request.getParameter(Ajax.BEAN_NAME_PARAM + index);
+		String methodName = request.getParameter(Ajax.METHOD_NAME_PARAM + index);
+		if(beanName==null || methodName==null) return false;
 		
 		Object bean = beanProvider == null ? Class.forName(beanName).newInstance() : beanProvider.getBeanInstance(beanName);
 		
@@ -221,21 +236,19 @@ public class AjaxService extends HttpServlet {
             }
         }
 
-        if(authorityProvider != null) {
-        	authorityProvider.checkRequest(request);
-        }
-        
         if(arguments.roles().length > 0) {
         	authorityProvider.checkRequest(request, arguments.roles());
         }
 		
-		Object[] params = getParams(ef, method, request);
+		Object[] params = getParams(index, ef, method, request);
 //		System.out.println(Arrays.toString(params));
 		try {
 			result.setData(method.invoke(bean, params));
 		}catch(Throwable th) {
 			throw th.getCause()!=null ? th.getCause() : th;
 		}
+		
+		return true;
 	}
 
 	
