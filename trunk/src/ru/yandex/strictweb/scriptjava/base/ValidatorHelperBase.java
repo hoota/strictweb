@@ -22,8 +22,8 @@ public class ValidatorHelperBase extends CommonElements {
 
     public boolean validate(DOMBuilder root) {
 		try {
-			root.forEachSubchild(new DOMEventCallback() {
-				public boolean delegate(Node n) {
+			root.forEachSubchild(new CommonDelegate<Boolean, Node>() {
+				public Boolean delegate(Node n) {
 					if(ignoreDisabledFields && n.field == DOMBuilder.DISABLED) return false;
 					
 					if(n.className == msgClassName) n.parentNode.removeChild(n);

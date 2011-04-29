@@ -232,7 +232,7 @@ public class JsonRefPresentation implements Presentation {
 			
 			assign.append('=');
 			objectName(assign, n);
-			assign.append(";\n");
+			assign.append(";");
 
 			if(buf.length() > 0 && buf.charAt(buf.length()-1)==',') buf.setLength(buf.length() - 1);
 			return true;

@@ -13,6 +13,7 @@ import ru.yandex.strictweb.ajaxtools.annotation.AjaxServiceHelper;
 import ru.yandex.strictweb.scriptjava.base.StrictWeb;
 import ru.yandex.strictweb.scriptjava.base.ajax.Ajax;
 import ru.yandex.strictweb.scriptjava.compiler.CompilerPlugin;
+import ru.yandex.strictweb.scriptjava.compiler.IgnoreExtends;
 import ru.yandex.strictweb.scriptjava.compiler.ParsedClass;
 import ru.yandex.strictweb.scriptjava.compiler.Parser;
 import ru.yandex.strictweb.scriptjava.compiler.VarType;
@@ -78,7 +79,7 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 		
 		parser.code.append("\n");
 		
-		if(null!=cl.type.getExtendsClause()) {
+		if(null!=cl.type.getExtendsClause() && !parser.hasAnnotation(IgnoreExtends.class.getSimpleName(), cl.type.getModifiers())) {
 			String superType = cl.type.extending.toString();
 			if(!parser.classes.get(superType).isNative) {
 				parser.code.append(parser.getObfuscatedName(StrictWeb.class.getSimpleName())+"."+parser.getObfuscatedName("extend") +

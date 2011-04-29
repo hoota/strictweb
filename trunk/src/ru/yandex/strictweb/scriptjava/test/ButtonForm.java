@@ -2,9 +2,8 @@ package ru.yandex.strictweb.scriptjava.test;
 
 import java.util.Date;
 
+import ru.yandex.strictweb.scriptjava.base.CommonDelegate;
 import ru.yandex.strictweb.scriptjava.base.CommonElements;
-import ru.yandex.strictweb.scriptjava.base.DOMEventCallback;
-import ru.yandex.strictweb.scriptjava.base.Node;
 import ru.yandex.strictweb.scriptjava.base.NodeBuilder;
 import ru.yandex.strictweb.scriptjava.base.custom.SelectNodeBuilder;
 import ru.yandex.strictweb.scriptjava.base.custom.TableNodeBuilder;
@@ -35,13 +34,13 @@ public class ButtonForm<E extends ButtonForm> extends CommonElements {
 	
 	NodeBuilder drawForm() {
 		final NodeBuilder log = $DIV();
-		final SelectNodeBuilder select = $SELECT();
+		SelectNodeBuilder select = $SELECT();
 		
 		TableNodeBuilder b = $TABLE();
 		
-		select.onChange(new DOMEventCallback() {
-			public boolean delegate(Node n) {
-				selected = EnumTest.valueOf(select.valueAsStr());
+		select.onChange(new CommonDelegate<Boolean, SelectNodeBuilder>() {
+			public Boolean delegate(SelectNodeBuilder s) {
+				selected = EnumTest.valueOf(s.valueAsStr());
 				Date d = new Date();
 				log.add($B(d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()))
 					.text(" " + selected.getTitle()).BR();
@@ -55,11 +54,11 @@ public class ButtonForm<E extends ButtonForm> extends CommonElements {
 		
 		return $DIV()
 		.add(EL("h2").text(name))
-		.add($BTN("Press me!", new DOMEventCallback() {
-			public boolean delegate(Node n) {
-				window.alert(null!=selected ? selected + ": " +selected.getTitle() : "Nothing is selected");
-				return false;
-			}
+		.add($BTN("Press me!", new CommonDelegate<Boolean, NodeBuilder>() {
+		    public Boolean delegate(NodeBuilder btn) {
+		        window.alert(null!=selected ? selected + ": " +selected.getTitle() : "Nothing is selected");
+		        return false;
+		    }
 		}))
 		.text(" ")
 		.add(select)

@@ -10,8 +10,8 @@ import ru.yandex.strictweb.scriptjava.base.custom.TableRowNodeBuilder;
 
 
 public class CommonElements extends StrictWeb {
-	public static final DOMEventCallback doNothing = new DOMEventCallback() {
-		public boolean delegate(Node n) {
+	public static final CommonDelegate<Boolean, NodeBuilder> doNothing = new CommonDelegate<Boolean, NodeBuilder>() {
+		public Boolean delegate(NodeBuilder n) {
 			stopEvent();
 			return false;
 		}
@@ -39,7 +39,7 @@ public class CommonElements extends StrictWeb {
 		return new NodeBuilder("span");
 	}
 	
-	public static final DOMBuilder<Node, ? extends Node, ?>[] $LABEL(Object title, DOMBuilder nb) {
+	public static final DOMBuilder[] $LABEL(Object title, DOMBuilder nb) {
 		NodeBuilder l = new NodeBuilder("label").append((Node)title);
 		l.node.htmlFor = nb.node.id;
 		if(null==nb.node.id) nb.node.id = nb.node.name;
@@ -94,7 +94,7 @@ public class CommonElements extends StrictWeb {
 		return new NoChildNodeBuilder("img").src(src==null?"about:blank":src);
 	}
 	
-	public static final NodeBuilder $BTN(String title, DOMEventCallback cb) {
+	public static final NodeBuilder $BTN(String title, CommonDelegate<Boolean, NodeBuilder> cb) {
 		return new NodeBuilder("button").text(title).onClick(cb);
 	}
 
@@ -113,4 +113,12 @@ public class CommonElements extends StrictWeb {
 	public static final NoChildNodeBuilder $TEXTAREA(String name) {
 		return new NoChildNodeBuilder("textarea").className("text").name(name);
 	}
+	    
+    public static final NodeBuilder $CHECKBOX(String name, boolean checked) {
+        return EL("input").className("cb").type("checkbox").name(name).checked(checked);
+    }
+
+    public static final NodeBuilder $RADIO(String name, boolean checked) {
+        return EL("input").className("cb").type("radio").name(name).checked(checked);
+    }	
 }

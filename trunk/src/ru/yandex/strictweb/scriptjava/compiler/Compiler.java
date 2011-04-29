@@ -6,10 +6,10 @@ import java.io.OutputStream;
 import java.util.Collection;
 
 import ru.yandex.strictweb.scriptjava.base.BrowserHistory;
+import ru.yandex.strictweb.scriptjava.base.CommonDelegate;
 import ru.yandex.strictweb.scriptjava.base.CommonElements;
 import ru.yandex.strictweb.scriptjava.base.DOMBuilder;
 import ru.yandex.strictweb.scriptjava.base.DOMEvent;
-import ru.yandex.strictweb.scriptjava.base.DOMEventCallback;
 import ru.yandex.strictweb.scriptjava.base.Document;
 import ru.yandex.strictweb.scriptjava.base.InputValidator;
 import ru.yandex.strictweb.scriptjava.base.JavaScriptFunction;
@@ -94,7 +94,7 @@ public class Compiler {
 			
 			.parseClass(DOMEvent.class)
 			.parseClass(VoidDelegate.class)
-			.parseClass(DOMEventCallback.class)	
+			.parseClass(CommonDelegate.class)	
 			.parseClass(CommonElements.class)
 			
 			.parseClass(ValidatorHelperBase.class)
