@@ -280,6 +280,7 @@ public class Parser implements CompilerPlugin {
 		String eName = clas.getSimpleName();
 		ParsedClass cl = new ParsedClass(eName, null);
 		cl.isEnum = true;
+//		cl.skipInnerObfuscation = true;
 		classes.put(eName, cl);
 		VarType clType = new VarType(cl);
 		ParsedMethod valuesMethod = new ParsedMethod("values", null, cl);
@@ -352,10 +353,10 @@ public class Parser implements CompilerPlugin {
 			//code.append(mName + ": null");
 			return null;		
 		} else if(value instanceof String) {
-			code.append(mName + ": " + safe(value.toString()) + ", ");
+			code.append(getObfuscatedName(mName) + ": " + safe(value.toString()) + ", ");
 			return VarType.STRING;
 		} else if(value instanceof Number) {
-			code.append(mName + ": " + value.toString() + ", ");			
+			code.append(getObfuscatedName(mName) + ": " + value.toString() + ", ");			
 			return VarType.NUMBER;
 		} else if(value.getClass().isEnum()) {
 			String clName = value.getClass().getSimpleName();
@@ -365,7 +366,7 @@ public class Parser implements CompilerPlugin {
 			    printWarning(clName + " in enum does not exists");
 			    return null;
 			}
-			code.append(mName + ": " + clName+"."+((Enum)value).name() + ", ");
+			code.append(getObfuscatedName(mName) + ": " + clName+"."+((Enum)value).name() + ", ");
             return cl.varType;
 		}
 		return null;
@@ -846,6 +847,7 @@ public class Parser implements CompilerPlugin {
 				if(mName.startsWith("get") || mName.startsWith("is")) {
 					mName = Character.toLowerCase(mName.charAt(3)) + mName.substring(4);
 				}
+				mName = cl.methods.get(mName).name;
 				code.append(mName);
 				if(mName.equals("valueOf") || mName.equals("toString")) {
 					parseArguments("(", arguments, ")");						
@@ -855,7 +857,7 @@ public class Parser implements CompilerPlugin {
 					code.append(getObfuscatedName(superInvocation+mName));
 					superInvocation = null;
 				} else {
-				    code.append(getObfuscatedName(mName, cl.isNative));
+				    code.append(getObfuscatedName(mName, cl.isNative || cl.skipInnerObfuscation));
 				}
 				//System.out.println(inv);
 				parseArguments("(", arguments, ")");
@@ -1003,12 +1005,20 @@ public class Parser implements CompilerPlugin {
 //		parseArguments("(", inv.getArguments(), ")");
 //		currentType = VarType.NUMBER;
 	}
+	
+	public void specialInvocationMethodSet_remove(JCMethodInvocation inv) {
+	    throw new RuntimeException("Use StrictWeb.jsDelObjectProperty");
+	}
 
 	public void specialInvocationMethodSet_add(JCMethodInvocation inv) {
 		removeLastPoint();
 		parseArguments("[", inv.getArguments(), "]");
 		code.append("=1");
 		currentType = null;
+	}
+	
+	public void specialInvocationMethodTreeSet_add(JCMethodInvocation inv) {
+	    specialInvocationMethodSet_add(inv);
 	}
 
 	public void specialInvocationMethodSet_contains(JCMethodInvocation inv) {
@@ -1019,6 +1029,10 @@ public class Parser implements CompilerPlugin {
 		currentType = t;
 	}
 
+	public void specialInvocationMethodTreeSet_contains(JCMethodInvocation inv) {
+	    specialInvocationMethodSet_contains(inv);
+	}	
+	
 	public void specialInvocationMethodString_length(JCMethodInvocation inv) {
 		specialInvocationMethodList_size(inv);
 	}
@@ -1106,6 +1120,7 @@ public class Parser implements CompilerPlugin {
 		ParsedClass cl = new ParsedClass(name, typeDecl);
 		cl.importList = currentImports;
 		cl.isInterface = typeDecl==null ? false : isInterface(typeDecl);
+		cl.skipInnerObfuscation = hasAnnotation(NoInnerObfuscation.class.getSimpleName(), modifiers);
 //		if(typeDecl.typeParameters().size()>0)
 //		System.out.println(typeDecl.typeParameters().get(0) + " :: " + typeDecl.typeParameters().get(0).getClass());
 		
@@ -1402,7 +1417,7 @@ public class Parser implements CompilerPlugin {
 				code.append(getObfuscatedName(cl.name) + ".prototype." + getObfuscatedName(cl.name + "_" + mName) + ifObfuscated("=", " =\n"));// + methodName +";\n");
 			}
 			
-			String methodName = getObfuscatedName(cl.name) + (isStatic ? "." : ".prototype.") + getObfuscatedName(isConstructor(m) ? mName + "_constructor" : mName);
+			String methodName = getObfuscatedName(cl.name) + (isStatic ? "." : ".prototype.") + getObfuscatedName(isConstructor(m) ? mName + "_constructor" : mName, cl.skipInnerObfuscation);
 			code.append(methodName + ifObfuscated("=function", " = function"));
 			if(isNative) {
 				boolean wasObfuscated = obfuscate;
@@ -1523,19 +1538,20 @@ public class Parser implements CompilerPlugin {
 			
 			ParsedClass cl = createNewParsedClass(getTempIndex()+type.getName(), node.clazz, null, acl.getMembers(), null);
 			currentClass.add(cl);
+			cl.skipInnerObfuscation = claz.skipInnerObfuscation;
 			for(Object o : acl.getMembers()) {
 				if(o instanceof JCVariableDecl) {
 					JCVariableDecl f = (JCVariableDecl)o;
 					if(i>0) code.append(","+indentPrefix);
 					i++;
-					code.append(getObfuscatedName(f.getName().toString()) + ": ");
+					code.append(getObfuscatedName(f.getName().toString(), cl.skipInnerObfuscation) + ": ");
 					parse(f.getInitializer());
 				}
 				if(o instanceof JCMethodDecl) {
 					if(i>0) code.append(","+indentPrefix);
 					i++;
 					JCMethodDecl m = (JCMethodDecl)o;
-					code.append(getObfuscatedName(m.getName().toString()) + ": function");
+					code.append(getObfuscatedName(m.getName().toString(), cl.skipInnerObfuscation) + ": function");
 					parseMethodMainBlock(m.getParameters(), m.getBody());
 				}
 			}
@@ -1588,9 +1604,9 @@ public class Parser implements CompilerPlugin {
 		
 //		System.out.println(node);
 		
-		//		if(n.equals("name")) {
-		//			System.out.println("\nisLocal: " + n + " in " + localVars+"\n"+currentClass.lastElement().varType);
-		//		}
+//				if(n.equals("FileUploaderOptions")) {
+//					System.out.println("\nisLocal: " + n + " in " + localVars+"\n"+currentClass.lastElement().varType);
+//				}
 				
 		if(!isLocal(n)) {			
 			currentType = null;//currentClass.lastElement().varType;
@@ -1616,11 +1632,11 @@ public class Parser implements CompilerPlugin {
 			if(null == currentType) {
 				if(!classes.containsKey(n)) throwCompileError(node, "Unknown static something: " + n);
 				currentType = (cl=classes.get(n)).varType;
+                code.append(getObfuscatedName(n, cl.isNative));
+			} else {			
+			    //			System.out.println(cl.name +"::"+n + "  ---  " + (cl.isNative || cl.skipInnerObfuscation));
+			    code.append(getObfuscatedName(n, cl.isNative || cl.skipInnerObfuscation));
 			}
-			
-//			System.out.println(cl.name +"::"+n + "  ---  " + (cl.isNative || cl.skipInnerObfuscation));
-			
-			code.append(getObfuscatedName(n, cl.isNative || cl.skipInnerObfuscation));		
 		} else {
 			currentType = localVarsTypes.get(n);
 			code.append(getObfuscatedName(n));		

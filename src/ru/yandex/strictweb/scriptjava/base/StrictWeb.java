@@ -1,6 +1,5 @@
 package ru.yandex.strictweb.scriptjava.base;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -119,19 +118,6 @@ public class StrictWeb {
 		return new NodeBuilder(tagName);
 	}
 	
-	public static final NodeBuilder $CHECKBOX(String name, boolean checked) {
-		return EL("input").className("cb").type("checkbox").name(name).checked(checked);
-	}
-
-	public static final NodeBuilder $RADIO(String name, boolean checked) {
-        return EL("input").className("cb").type("radio").name(name).checked(checked);
-    }
-	
-	@NativeCode("{var nb = %StrictWeb%.%EL%('b');nb.node = %StrictWeb%.%$CHECKBOX%(name, checked, text, checkedUrl, uncheckedUrl);return nb;}")
-	public static final NodeBuilder $CHECKBOXcustom(String name, boolean checked, String text, String checkedUrl, String uncheckedUrl) {
-		return null;
-	}
-
 	@NativeCode("{for(var k in src) if(k!='prototype')dst[k] = src[k];return dst;}")
 	public static void extend(Object dst, Object src) {
 	}
@@ -145,10 +131,10 @@ public class StrictWeb {
 	}
 
 	@NativeCode("{if(cb==null){obj[name]=null;return;};obj[name] = typeof cb=='function'?cb:function(ev, nullNode) {%StrictWeb%.%swTarget%=null;%StrictWeb%.%globalEvent%=ev||window.event;if(cb&&cb.%delegate%)return cb.%delegate%(nullNode ? null : this);return false;}}")
-	public static void setDOMEventCallback(Object obj, String name, DOMEventCallback cb) {
+	public static void setDOMEventCallback(Object obj, String name, CommonDelegate<Boolean, Node> cb) {
 	}
 	
-	@NativeCode("{if(cb==null){obj[name]=null;return;};obj[name] = typeof cb=='function'?cb:function(ev) {if(cb&&cb.%voidDelegate%) cb.%voidDelegate%(this);return false;}}")
+	@NativeCode("{if(cb==null){obj[name]=null;return;};obj[name] = typeof cb=='function'?cb:function(ev) {if(cb&&cb.%voidDelegate%) cb.%voidDelegate%(obj);return false;}}")
 	public static void setVoidEventCallback(Object obj, String name, VoidDelegate<?> cb) {
 	}
 
@@ -165,12 +151,12 @@ public class StrictWeb {
 	 * @return the function, that can be used to call
 	 */
 	@NativeCode("{if(cb==null)return null;var f = function(ev, nullNode) {%StrictWeb%.%swTarget%=null;%StrictWeb%.%globalEvent%=ev||window.event;return cb.%delegate%(nullNode ? null : this);};obj.addEventListener(event, f, useCapture); return f;}")
-	public static JavaScriptFunction addEventListener(Object obj, String event, DOMEventCallback cb, boolean useCapture) {
+	public static JavaScriptFunction addEventListener(Object obj, String event, CommonDelegate<Boolean, Node> cb, boolean useCapture) {
 		return null;
 	}
 	
-	public static void onLoadWindow(DOMEventCallback cb) {
-		setDOMEventCallback(window, "onload", cb);
+	public static void onLoadWindow(VoidDelegate<Window> cb) {
+		setVoidEventCallback(window, "onload", cb);
 	}
 	
 	@NativeCode("{return new RegExp(base, flags);}")
@@ -215,6 +201,20 @@ public class StrictWeb {
 		return null;
 	}
 	
+    @NativeCode("{return o[property];}")
+	public static Object jsGetObjectProperty(Object o, String property) {
+	    return null;
+	}
+	
+    @NativeCode("{return o[property]=value;}")
+    public static Object jsSetObjectProperty(Object o, String property, Object value) {
+        return null;
+    }
+    
+    @NativeCode("{delete o[property];}")
+    public static void jsDelObjectProperty(Object o, Object property) {
+    }
+    
 	@NativeCode("{return isNaN(o);}")
 	public static boolean isNaN(Object o) {
 		return false;
@@ -225,7 +225,7 @@ public class StrictWeb {
 	 * @return new list
 	 */
 	public static <T> List<T> arrayRemove(List<T> list, T obj) {
-		List<T> res = new ArrayList<T>();
+		List<T> res = jsNewList();
 		for(T o : list) if(o!=obj) res.add(o);
 		return res;
 	}
@@ -294,7 +294,7 @@ public class StrictWeb {
 	}
 	
 	@NativeCode("{return typeof obj;}")
-	public static String typeOf(Object obj) {
+	public static String jsTypeOf(Object obj) {
 		return null;
 	}
 
@@ -335,7 +335,7 @@ public class StrictWeb {
 	}
 
 	@NativeCode("{return list.join(sep);}")
-	public static String listJoin(Object list, String sep) {
+	public static String jsJoinList(Object list, String sep) {
 		return null;
 	}
 
@@ -348,14 +348,11 @@ public class StrictWeb {
 	}
 	
 	@NativeCode("{return {};}")
-	public static <K, V> Map<K, V> newJsMap() {return null;}
-	
-	@NativeCode("{delete map[key];}")
-	public static <K, V> void removeFromMap(Map<K, V> map, K key) {}
+	public static <K, V> Map<K, V> jsNewMap() {return null;}
 	
     @NativeCode("{return {};}")
-    public static <V> Set<V> newJsSet() {return null;}
+    public static <V> Set<V> jsNewSet() {return null;}
 
     @NativeCode("{return [];}")
-    public static <V> List<V> newJsList() {return null;}
+    public static <V> List<V> jsNewList() {return null;}
 }

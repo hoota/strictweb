@@ -1,8 +1,7 @@
 package ru.yandex.strictweb.example.helloworld;
 
+import ru.yandex.strictweb.scriptjava.base.CommonDelegate;
 import ru.yandex.strictweb.scriptjava.base.CommonElements;
-import ru.yandex.strictweb.scriptjava.base.DOMEventCallback;
-import ru.yandex.strictweb.scriptjava.base.Node;
 import ru.yandex.strictweb.scriptjava.base.NodeBuilder;
 import ru.yandex.strictweb.scriptjava.base.StrictWeb;
 
@@ -17,8 +16,8 @@ public class HelloWorld extends CommonElements {
 
 	private NodeBuilder drawForm() {
 		// создаем DIV и в нем обычную кнопку
-		return $DIV().add($BTN("Нажми меня!".replace("!", "?"), new DOMEventCallback() {
-			public boolean delegate(Node n) {
+		return $DIV().add($BTN("Нажми меня!".replace("!", "?"), new CommonDelegate<Boolean, NodeBuilder>() {
+			public Boolean delegate(NodeBuilder n) {
 				window.alert("Hello, World!");
 				return false;
 			}

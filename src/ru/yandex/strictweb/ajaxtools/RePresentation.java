@@ -94,7 +94,7 @@ public class RePresentation {
 		} else if(clazz.equals(String.class)) {
 			return value;
 		} else if(clazz.isEnum()) {
-			return Enum.valueOf(clazz, value);		
+		    return Enum.valueOf(clazz, value);
 		} else if(clazz.equals(Timestamp.class)) {
 			long ts = parseDate(value);
             return ts==-1 ? null : new Timestamp(ts);

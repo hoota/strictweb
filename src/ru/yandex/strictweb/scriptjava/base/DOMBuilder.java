@@ -15,6 +15,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	public static final String EV_ONMOUSEDOWN = "onmousedown";
 	public static final String EV_ONMOUSEUP = "onmouseup";
 	public static final String EV_ONMOUSEOUT = "onmouseout";
+	public static final String EV_ONMOUSEOVER = "onmouseover";
 	public static final String EV_ONMOUSEMOVE = "onmousemove";
 	public static final String EV_ONCLICK = "onclick";
 	public static final String DISABLED = "disabled";
@@ -27,44 +28,60 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		node = (N)createNode(tagName);
 	}
 	
-	@NativeCode("{this.node[eventName](%StrictWeb%.%globalEvent%, nullNode);return this;}")
-	final public S fireEvent(String eventName, boolean nullNode) {
+	@NativeCode("{this.%node%[eventName](%StrictWeb%.%globalEvent%);return this;}")
+	final public S fireEvent(String eventName) {
 		return (S)this;
 	}
 	
-	final public S onClick(DOMEventCallback callback) {
+    @NativeCode(
+        "{if(cb==null){this.%node%[name]=null;return;}" +
+        "var b=this;" +
+        "b.%node%[name] = function(ev) {" +
+            "%StrictWeb%.%swTarget%=null;" +
+            "%StrictWeb%.%globalEvent%=ev||window.event;" +
+            "return cb.%delegate%(b);" +
+        "}}")
+    public void setEventDelegate(String name, CommonDelegate<Boolean, S> cb) {
+    }
+    
+	final public S onClick(CommonDelegate<Boolean, S> callback) {
         node.style.cursor = "pointer";
-		StrictWeb.setDOMEventCallback(node, EV_ONCLICK, callback);
+        setEventDelegate(EV_ONCLICK, callback);
 		return (S)this;
 	}
 	
-	final public S onMouseMove(DOMEventCallback onMouseMoveCallback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONMOUSEMOVE, onMouseMoveCallback);
+	final public S onMouseMove(CommonDelegate<Boolean, S> onMouseMoveCallback) {
+		setEventDelegate(EV_ONMOUSEMOVE, onMouseMoveCallback);
 		return (S)this;
 	}
 	
-	final public S onMouseOut(DOMEventCallback onMouseOutCallback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONMOUSEOUT, onMouseOutCallback);
+	final public S onMouseOut(CommonDelegate<Boolean, S> onMouseOutCallback) {
+		setEventDelegate(EV_ONMOUSEOUT, onMouseOutCallback);
 		return (S)this;
 	}
 	
-	final public S onMouseUp(DOMEventCallback onMouseUpCallback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONMOUSEUP, onMouseUpCallback);
+    final public S onMouseOver(CommonDelegate<Boolean, S> onMouseOutCallback) {
+        setEventDelegate(EV_ONMOUSEOVER, onMouseOutCallback);
+        return (S)this;
+    }
+	
+	final public S onMouseUp(CommonDelegate<Boolean, S> onMouseUpCallback) {
+		setEventDelegate(EV_ONMOUSEUP, onMouseUpCallback);
 		return (S)this;
 	}
 
-	final public S onMouseDown(DOMEventCallback onMouseDownCallback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONMOUSEDOWN, onMouseDownCallback);
+	final public S onMouseDown(CommonDelegate<Boolean, S> onMouseDownCallback) {
+		setEventDelegate(EV_ONMOUSEDOWN, onMouseDownCallback);
 		return (S)this;
 	}
 	
-	final public S onSubmit(DOMEventCallback callback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONSUBMIT, callback);
+	final public S onSubmit(CommonDelegate<Boolean, S> callback) {
+		setEventDelegate(EV_ONSUBMIT, callback);
 		return (S)this;
 	}
 	
-	final public S onDblClick(DOMEventCallback callback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONDBLCLICK, callback);
+	final public S onDblClick(CommonDelegate<Boolean, S> callback) {
+		setEventDelegate(EV_ONDBLCLICK, callback);
 		return (S)this;
 	}
 
@@ -239,8 +256,8 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		return (S)this;
 	}
 
-	public S onChange(DOMEventCallback callback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONCHANGE, callback);
+	public S onChange(CommonDelegate<Boolean, S> callback) {
+		setEventDelegate(EV_ONCHANGE, callback);
 		return (S)this;
 	}
 
@@ -298,7 +315,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		return (S)this;
 	}
 
-	public void forEachSubchild(DOMEventCallback cb) {
+	public void forEachSubchild(CommonDelegate<Boolean, Node> cb) {
 		LinkedList<Node> nodes = new LinkedList<Node>();
 		nodes.push(this.node);
 		while(nodes.size() > 0) {
@@ -334,28 +351,28 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		return node.checked;
 	}
 
-	public S onKeyUp(DOMEventCallback callback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONKEYUP, callback);
+	public S onKeyUp(CommonDelegate<Boolean, S> callback) {
+		setEventDelegate(EV_ONKEYUP, callback);
 		return (S)this;
 	}
 
-	public S onKeyPress(DOMEventCallback callback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONKEYPRESS, callback);
+	public S onKeyPress(CommonDelegate<Boolean, S> callback) {
+		setEventDelegate(EV_ONKEYPRESS, callback);
 		return (S)this;
 	}
 
-	public S onBlur(DOMEventCallback callback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONBLUR, callback);
+	public S onBlur(CommonDelegate<Boolean, S> callback) {
+		setEventDelegate(EV_ONBLUR, callback);
 		return (S)this;
 	}
 
-	public S onFocus(DOMEventCallback callback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONFOCUS, callback);
+	public S onFocus(CommonDelegate<Boolean, S> callback) {
+		setEventDelegate(EV_ONFOCUS, callback);
 		return (S)this;
 	}
 	
-	public S onKeyDown(DOMEventCallback callback) {
-		StrictWeb.setDOMEventCallback(node, EV_ONKEYDOWN, callback);
+	public S onKeyDown(CommonDelegate<Boolean, S> callback) {
+		setEventDelegate(EV_ONKEYDOWN, callback);
 		return (S)this;
 	}
 	

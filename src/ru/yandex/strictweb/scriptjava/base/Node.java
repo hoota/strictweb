@@ -2,8 +2,6 @@ package ru.yandex.strictweb.scriptjava.base;
 
 @Native
 public class Node {
-	public DOMEventCallback onclick;
-	public DOMEventCallback onmousedown;
 	public String className;
 	public String href;
 	public Style style;
@@ -61,8 +59,7 @@ public class Node {
 	public void appendChild(Node child) {
 	}
 	
-	public void insertBefore(Node newChild, Node existed) {
-		
+	public void insertBefore(Node newChild, Node existed) {		
 	}
 
 	public void removeChild(Node child) {

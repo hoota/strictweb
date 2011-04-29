@@ -71,15 +71,15 @@ public class AjaxService extends HttpServlet {
 		if(view != null) {
 			if(view.equals("xml")) {
 				response.setContentType("application/xml");
-				p = new XmlPresentation();
+				p = new XmlPresentation(response.getWriter());
 			}else if(view.equals("jsonparanoid")) {
-				response.setContentType("text/plain");
-				p = new JsonParanoidPresentation();				
+//				response.setContentType("text/javascript");
+				p = new JsonParanoidPresentation(response.getWriter());				
 			}
 		}
 		
 		if(p == null) {
-			response.setContentType("text/plain");
+//			response.setContentType("text/javascript");
 			p = new JsonRefPresentation();
 		}
 		
@@ -87,7 +87,7 @@ public class AjaxService extends HttpServlet {
 	}
 	
 	
-	Object[] getParams(int index, RePresentation.EntityFinder ef, Method method, HttpServletRequest request) throws Exception {
+	Object[] getParams(String paramsData, RePresentation.EntityFinder ef, Method method, HttpServletRequest request) throws Exception {
 		int nParams = method.getParameterTypes().length;
 		if(nParams == 0) return null;
 		
@@ -97,7 +97,7 @@ public class AjaxService extends HttpServlet {
 		Object[] params = new Object[nParams];
 		Document doc = null;
 		
-		doc = newDocument(request.getParameter(Ajax.XML_DATA_PARAM+index));
+		doc = newDocument(paramsData);
 		
 		RePresentation rep = new RePresentation(ef);			
 
@@ -140,15 +140,20 @@ public class AjaxService extends HttpServlet {
 			
 			Presentation present = getPresentation(request, response);
 			List<AjaxRequestResult> results = new ArrayList<AjaxRequestResult>();
-			
-			if(authorityProvider != null) {
-			    authorityProvider.checkRequest(request);
-			}
-			
+						
 			for(int i=0;;i++) {
 			    AjaxRequestResult result = new AjaxRequestResult();
-			    
+			    			    
     			try {				
+    		        String beanName = request.getParameter(Ajax.BEAN_NAME_PARAM + i);
+    		        String methodName = request.getParameter(Ajax.METHOD_NAME_PARAM + i);
+                    String paramsData = request.getParameter(Ajax.XML_DATA_PARAM + i);
+    		        if(beanName==null || methodName==null) break;
+    		        
+    			    if(authorityProvider != null) {
+    			        authorityProvider.checkRequest(request);
+    			    }
+    			    
     				final EntityManager em = orm == null ? null : orm.get();
     				
     				
@@ -159,7 +164,7 @@ public class AjaxService extends HttpServlet {
     					}
     				};
     				
-                    if(!doAction(i, ef, request, result)) break;
+                    if(!doAction(beanName, methodName, paramsData, ef, request, result)) break;
     				
     				if(orm != null) orm.commit();
     
@@ -171,8 +176,10 @@ public class AjaxService extends HttpServlet {
     			
     			results.add(result);
 			}
-			
-			response.getWriter().print(present.toString(results));
+			String resultStr = present.toString(results.size() == 1 ? results.get(0) : results);
+			if(null != resultStr) {
+			    response.getWriter().print(resultStr);
+			}
 		}catch(Throwable e) {
 			e.printStackTrace();
 			if(null!=orm) orm.rollback();
@@ -203,11 +210,7 @@ public class AjaxService extends HttpServlet {
 	    }
     }
 
-    protected boolean doAction(int index, RePresentation.EntityFinder ef, HttpServletRequest request, AjaxRequestResult result) throws Throwable {
-		String beanName = request.getParameter(Ajax.BEAN_NAME_PARAM + index);
-		String methodName = request.getParameter(Ajax.METHOD_NAME_PARAM + index);
-		if(beanName==null || methodName==null) return false;
-		
+    protected boolean doAction(String beanName, String methodName, String paramsData, RePresentation.EntityFinder ef, HttpServletRequest request, AjaxRequestResult result) throws Throwable {		
 		Object bean = beanProvider == null ? Class.forName(beanName).newInstance() : beanProvider.getBeanInstance(beanName);
 		
         Method method = null;
@@ -240,7 +243,7 @@ public class AjaxService extends HttpServlet {
         	authorityProvider.checkRequest(request, arguments.roles());
         }
 		
-		Object[] params = getParams(index, ef, method, request);
+		Object[] params = getParams(paramsData, ef, method, request);
 //		System.out.println(Arrays.toString(params));
 		try {
 			result.setData(method.invoke(bean, params));

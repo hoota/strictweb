@@ -1,12 +1,11 @@
 package ru.yandex.strictweb.example.simples;
 
+import ru.yandex.strictweb.scriptjava.base.CommonDelegate;
 import ru.yandex.strictweb.scriptjava.base.CommonElements;
-import ru.yandex.strictweb.scriptjava.base.DOMEventCallback;
-import ru.yandex.strictweb.scriptjava.base.Node;
 import ru.yandex.strictweb.scriptjava.base.NodeBuilder;
 import ru.yandex.strictweb.scriptjava.base.custom.NoChildNodeBuilder;
 
-public class EventExample extends CommonElements implements DOMEventCallback {
+public class EventExample extends CommonElements implements CommonDelegate<Boolean, NoChildNodeBuilder> {
     private NoChildNodeBuilder input;
 
     private NodeBuilder draw() {
@@ -15,8 +14,8 @@ public class EventExample extends CommonElements implements DOMEventCallback {
             .add(input = $INPUT().onChange(this))
             .BR()
             // or create new anonym class
-            .add($BTN("Push me", new DOMEventCallback() {
-                public boolean delegate(Node n) {
+            .add($BTN("Push me", new CommonDelegate<Boolean, NodeBuilder>() {
+                public Boolean delegate(NodeBuilder n) {
                     window.alert(input.valueAsStr());
                     return false;
                 }
@@ -25,8 +24,8 @@ public class EventExample extends CommonElements implements DOMEventCallback {
     }
 
     // input onChange
-    public boolean delegate(Node n) {
-        window.alert("input.onChange: " + n.value);
+    public Boolean delegate(NoChildNodeBuilder n) {
+        window.alert("input.onChange: " + n.valueAsStr());
         return true; // we need it
     }
 
