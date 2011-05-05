@@ -1,5 +1,6 @@
 package ru.yandex.strictweb.ajaxtools.presentation;
 
+import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
@@ -52,7 +53,7 @@ public class JsonRefPresentation implements Presentation {
         return returnStr ? buf.toString() : null;
     }
 	
-	void objectBegin(String key, Object x, char bracket) {
+	void objectBegin(String key, Object x, char bracket) throws IOException {
 		int ci = currentIndex;
 		currentIndex = objectIndex++;
 		
@@ -61,7 +62,7 @@ public class JsonRefPresentation implements Presentation {
 		if(key == null) {
 			objectName(buf, currentIndex);
 		} else {
-			buf.append(JsonPresentation._safeKey(key));
+			JsonPresentation.staticSafeKey(buf, key);
 			objectName(buf, currentIndex);
 		}
 
@@ -100,7 +101,7 @@ public class JsonRefPresentation implements Presentation {
 		return first;
 	}
 	
-	boolean presentSimpleOne(String key, Object o) {
+	boolean presentSimpleOne(String key, Object o) throws IOException {
 		if(o == null) {
 			presentNull(key);
 			return true;
@@ -147,11 +148,7 @@ public class JsonRefPresentation implements Presentation {
 		if(presentSimpleOne(key, o)) return;
 		if(objectExists(key, o, arrayIndex)) return;
 		
-		if(ClassMethodsInfo.isPresentableOrEntity(o.getClass())) {
-			objectBegin(key, o, '{');
-			presentEntity(o, true);
-			objectEnd(key, '}');
-		} else if(o instanceof Object[]) {
+		if(o instanceof Object[]) {
 			objectBegin(key, o, '[');
 			int ai = 0;
 			for(Object a : (Object[])o) {
@@ -197,18 +194,22 @@ public class JsonRefPresentation implements Presentation {
 			} else {
 				throw new RuntimeException("Arrays of this simple type are not yet implemented :(");
 			}
-		} else {
+		} else if(ClassMethodsInfo.isPresentableOrEntity(o.getClass())) {
+            objectBegin(key, o, '{');
+            presentEntity(o, true);
+            objectEnd(key, '}');
+        } else {
 			presentString(key, o.toString());
 		}				
 	}
 
-	private boolean objectExists(String key, Object o, int arrayIndex) {
+	private boolean objectExists(String key, Object o, int arrayIndex) throws IOException {
 		Integer n = references.get(o);
 		
 		if(n!=null) {
 			if(key != null) {
 				if(currentIndex < n) {
-					buf.append(JsonPresentation._safeKey(key));
+					JsonPresentation.staticSafeKey(buf, key);
 					objectName(buf, n);
 					return true;
 				}
@@ -217,7 +218,7 @@ public class JsonRefPresentation implements Presentation {
 				if(JsonPresentation.hashKeyPattern.matcher(key).matches()) {
 					assign.append('.').append(key);
 				} else {
-					assign.append("['").append(JsonPresentation._safe(key)).append("']");
+					JsonPresentation.staticSafe(assign.append("['"), key).append("']");
 				}
 			} else {
 				if(currentIndex < n) {
@@ -242,19 +243,19 @@ public class JsonRefPresentation implements Presentation {
 		return false;
 	}
 
-	void presentString(String key, String val) {
-		if(key == null) buf.append(JsonPresentation._safe(val));
-		else buf.append(JsonPresentation._safeKey(key)+JsonPresentation._safe(val));
+	void presentString(String key, String val) throws IOException {
+		if(key == null) JsonPresentation.staticSafe(buf, val);
+		else JsonPresentation.staticSafe(JsonPresentation.staticSafeKey(buf, key), val);
 	}
 	
-	void presentNull(String key) {
+	void presentNull(String key) throws IOException {
 		if(key == null) buf.append("null");
-		else buf.append(JsonPresentation._safeKey(key)+"null");		
+		else JsonPresentation.staticSafeKey(buf, key).append("null");		
 	}
 
-	void presentNumber(String key, String val) {
+	void presentNumber(String key, String val) throws IOException {
 		if(key == null) buf.append(val);
-		else buf.append(JsonPresentation._safeKey(key) + val);
+		else JsonPresentation.staticSafeKey(buf, key).append(val);
 	}
 	
 	void addSeparator() {

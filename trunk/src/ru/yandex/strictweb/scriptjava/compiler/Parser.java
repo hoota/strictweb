@@ -302,7 +302,12 @@ public class Parser implements CompilerPlugin {
 		cl.methods.put("name", nameMethod);
 
 		
-		code.append("function "+eName+"() {};\n"+eName+".values = [\n");
+		code.append("function "+eName+"() {};");
+        if(obfuscate) {
+            code.append(getObfuscatedName(eName)+" = "+eName+";");            
+        }
+        code.append("\n"+eName+".values = [\n");
+        
 		boolean firstValue = true;
 
 		for(Enum enumObj : clas.getEnumConstants()) {
@@ -311,6 +316,9 @@ public class Parser implements CompilerPlugin {
 			cl.staticFields.add(enumName);
 			//System.out.println(enumObj);
 			if(!firstValue) code.append(",\n"); firstValue = false;
+	        if(obfuscate) {
+	            code.append(getObfuscatedName(eName)+"."+getObfuscatedName(enumName)+"=");            
+	        }			
 			code.append(eName + "." + enumName + " = {");
 			for(Method m : clas.getDeclaredMethods()) { 
 				if(m.getParameterTypes().length!=0) continue;
@@ -342,9 +350,6 @@ public class Parser implements CompilerPlugin {
 			code.append("_isEnum:true, toString: function() {return '"+enumName+"';}}");
 		}
 		code.append("\n];\n"+eName+".valueOf = function(n){return "+eName+"[n];}\n");
-		if(obfuscate) {
-	        code.append(getObfuscatedName(eName)+" = "+eName+";\n");		    
-		}
 	}
 
 	private VarType drawEnumFieldOrMethod(String mName, Object value) {
@@ -1817,7 +1822,10 @@ public class Parser implements CompilerPlugin {
 		parse(node.getExpression());
 		code = temp;
 		
-		if(currentType.nameIs("Map") || currentType.nameIs("Set")) {			
+		if(currentType.nameIs("Map") || currentType.nameIs("Set")
+		    || currentType.nameIs("TreeMap") || currentType.nameIs("TreeSet")
+            || currentType.nameIs("HashMap") || currentType.nameIs("HashSet")
+		    ) {			
 			currentType = null;
 			addLabelIfNeeded();
 			code.append("for(var ");

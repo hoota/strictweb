@@ -114,8 +114,8 @@ public class CommonElements extends StrictWeb {
 		return new NoChildNodeBuilder("textarea").className("text").name(name);
 	}
 	    
-    public static final NodeBuilder $CHECKBOX(String name, boolean checked) {
-        return EL("input").className("cb").type("checkbox").name(name).checked(checked);
+    public static final NoChildNodeBuilder $CHECKBOX(String name, boolean checked) {
+        return new NoChildNodeBuilder("input").className("cb").type("checkbox").name(name).checked(checked);
     }
 
     public static final NodeBuilder $RADIO(String name, boolean checked) {

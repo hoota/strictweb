@@ -74,10 +74,6 @@ public abstract class AbstractPresentation implements Presentation {
 			String val = String.format(dateFormat.format, o);
 			if(dateFormat.quote) presentString(key, val, forceItem);
 			else presentNumber(key, val, forceItem);
-		} else if(ClassMethodsInfo.isPresentableOrEntity(o.getClass())) {
-			if(!hashBegin(key, o)) return;
-			presentEntity(o, true);
-			hashEnd(key, o);
 		} else if(o instanceof Object[]) {
 			listBegin(key, o);
 			for(Object a : (Object[])o) {
@@ -120,7 +116,11 @@ public abstract class AbstractPresentation implements Presentation {
 			} else {
 				presentString(key, ((Enum)o).name(), forceItem);				
 			}
-		} else {
+		} else if(ClassMethodsInfo.isPresentableOrEntity(o.getClass())) {
+            if(!hashBegin(key, o)) return;
+            presentEntity(o, true);
+            hashEnd(key, o);
+        } else {
 			presentString(key, o.toString(), forceItem);
 		}				
 	}

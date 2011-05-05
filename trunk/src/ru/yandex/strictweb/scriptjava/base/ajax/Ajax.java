@@ -1,9 +1,9 @@
 package ru.yandex.strictweb.scriptjava.base.ajax;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import ru.yandex.strictweb.ajaxtools.exception.AjaxException;
 import ru.yandex.strictweb.scriptjava.base.ActiveXObject;
@@ -23,7 +23,8 @@ import ru.yandex.strictweb.scriptjava.plugins.AjaxServiceHelperCompilerPlugin;
 import ru.yandex.strictweb.scriptjava.plugins.EntityCompilerPlugin;
 
 public class Ajax {
-	private static final String MICROSOFT_XMLHTTP = "Microsoft.XMLHTTP";
+    public static final String FIELD_MULTISELECT = "field.multiselect";
+    private static final String MICROSOFT_XMLHTTP = "Microsoft.XMLHTTP";
 	private static final String EV_ONREADYSTATECHANGE = "onreadystatechange";
 	public static String XML_DATA_PARAM = "xml-data";
 	public static String BEAN_NAME_PARAM = "bean";
@@ -111,6 +112,8 @@ public class Ajax {
 	        postXml += "&"+XML_DATA_PARAM+i+"="
 	            + objectToXml(r.args, null).replaceAll("%", "%25").replaceAll("&", "%26").replaceAll(";", "%3B").replaceAll("\\+", "%2B");
 	    }
+        
+        Log.info(postXml);
 	   
 		final String url = getRequestUrl(requests);
 		
@@ -303,26 +306,33 @@ public class Ajax {
 		
 		for(Node el : start.childNodes) {
 		    if(el.field == DOMBuilder.DISABLED) continue;
-			if((el.id!=null||el.name!=null) && (el.tagName=="INPUT" || el.tagName=="SELECT" || el.tagName=="TEXTAREA")) {
+			if(((Boolean)(Object)el.id || (Boolean)(Object)el.name) && (el.tagName=="INPUT" || el.tagName=="SELECT" || el.tagName=="TEXTAREA")) {
 				if(el.type == "radio" && !el.checked) continue;
 				
-				xml += "<f id=\"" + (el.id!=""?el.id:el.name) + "\">";
+				xml += "<f id=\"" + ((Boolean)(Object)el.id || (Boolean)(Object)el.name) + "\">";
 				
 				if(el.type == "checkbox") xml += el.checked ? "1" : "0";
 				else xml += StrictWeb.toHTML((String)el.value);
 				
 				xml += "</f>";
 				
-			} else if(el.className=="field.multiselect") {
-				final List<String> val = new Vector<String>();
+			} else if(el.className!=null && el.className.indexOf(FIELD_MULTISELECT) >= 0) {
+				final List<Object> val = new ArrayList<Object>();
 				NodeBuilder.wrap(el).forEachSubchild(new CommonDelegate<Boolean, Node>() {
 					public Boolean delegate(Node n) {
-						if(n.checked) val.add((n.id!=null?n.id:n.name));
+					    if(n.field == DOMBuilder.DISABLED) return false;
+					    if(n.tagName=="INPUT" || n.tagName=="SELECT") {
+					        if(n.type == "checkbox") {
+					            if(n.checked) val.add((Boolean)(Object)n.id || (Boolean)(Object)n.name);
+					        } else {
+					            val.add((String)n.value);
+					        }
+					    }
 						return true;
 					}
 				});
 				
-				xml += "<ms id=\"" + (el.id!=null?el.id:el.name) + "\">"
+				xml += "<ms id=\"" + el.field + "\">"
 				+ (val.size() > 0 ? "<q>" : "")
 				+ StrictWeb.jsJoinList(val, "</q><q>")
 				+ (val.size() > 0 ? "</q>" : "")				

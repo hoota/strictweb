@@ -33,7 +33,7 @@ public class JsonPresentation extends AbstractPresentation {
 	@Override
 	boolean hashBegin(String key, Object x) throws IOException {
 		if(key == null) buf.append("{");
-		else buf.append(safeKey(key)).append("{");
+		else safeKey(key).append("{");
 		return true;
 	}
 
@@ -45,7 +45,7 @@ public class JsonPresentation extends AbstractPresentation {
 	@Override
     boolean listBegin(String key, Object x) throws IOException {
         if(key == null) buf.append("[");
-        else buf.append(safeKey(key)).append("[");
+        else safeKey(key).append("[");
         return true;
     }
 
@@ -61,20 +61,23 @@ public class JsonPresentation extends AbstractPresentation {
 
 	@Override
     void presentString(String key, String val, boolean forceItem) throws IOException {
-        if(key == null) buf.append(safe(val));
-        else buf.append(safeKey(key)).append(safe(val));
+        if(key == null) safe(val);
+        else {
+            safeKey(key);
+            safe(val);
+        }
     }
 	
 	@Override
     void presentNull(String key, boolean forceItem) throws IOException {
         if(key == null) buf.append("null");
-        else buf.append(safeKey(key)).append("null");       
+        else safeKey(key).append("null");       
     }
 
 	@Override
     void presentNumber(String key, String val, boolean forceItem) throws IOException {
         if(key == null) buf.append(val);
-        else buf.append(safeKey(key)).append(val);
+        else safeKey(key).append(val);
     }
 
 	static Pattern slashPattern = Pattern.compile("\\\\");
@@ -82,22 +85,24 @@ public class JsonPresentation extends AbstractPresentation {
 	static Pattern nPattern = Pattern.compile("\n");
 	static Pattern rPattern = Pattern.compile("\r");
 	
-	public static String _safe(String s) {
+	public static Appendable staticSafe(Appendable b, String s) throws IOException {
 		s = slashPattern.matcher(s).replaceAll("\\\\\\\\");
 		s = quotePattern.matcher(s).replaceAll("\\\\'");
 		s = nPattern.matcher(s).replaceAll("\\\\n");
-		return '\''+rPattern.matcher(s).replaceAll("\\\\r")+'\'';
+		return b.append('\'').append(rPattern.matcher(s).replaceAll("\\\\r")).append('\'');		
 	}
 	
-	public static String _safeKey(String key) {
-		return (hashKeyPattern.matcher(key).matches() ? key : _safe(key)) + ":";
+	public static Appendable staticSafeKey(Appendable b, String key) throws IOException {
+	    if(hashKeyPattern.matcher(key).matches()) b.append(key);
+	    else staticSafe(b, key);
+	    return b.append(':');
 	}
 	
-	public String safe(String s) {
-		return _safe(s);
+	public Appendable safe(String s) throws IOException {
+		return staticSafe(buf, s);
 	}
 	
-	public String safeKey(String key) {
-		return _safe(key) + ":";
+	public Appendable safeKey(String key) throws IOException {
+	    return staticSafeKey(buf, key);
 	}
 }

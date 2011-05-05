@@ -122,8 +122,10 @@ public class EntityCompilerPlugin implements CompilerPlugin {
             return;
         }               
         
-        if(type.nameIs("List")) val = "[]";
-        else if(type.nameIs("Map") || type.nameIs("Set")) val = "{}";        
+        if(type.nameIs("List") || type.nameIs("ArrayList")) val = "[]";
+        else if(type.nameIs("Map") || type.nameIs("Set") 
+            || type.nameIs("TreeMap") || type.nameIs("TreeSet") 
+            || type.nameIs("HashMap") || type.nameIs("HashSet")) val = "{}";        
 
         if(null == val || "null".equals(val.toString())) return;
         

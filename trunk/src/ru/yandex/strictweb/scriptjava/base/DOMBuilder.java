@@ -177,15 +177,15 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		return (S)this;
 	}
 	
-	public S addList(List<DOMBuilder<C, ? extends Node, ?>> items) {
+	public S addList(List<DOMBuilder<? extends C, ? extends Node, ?>> items) {
 		if(null!=items)
-		for(DOMBuilder<C, ? extends Node, ?> b : items)  append(b.node);
+		for(DOMBuilder<? extends C, ? extends Node, ?> b : items)  append(b.node);
 		return (S)this;
 	}
 
-	public S addAll(DOMBuilder<C, ? extends Node, ?>[] items) {
+	public S addAll(DOMBuilder<? extends C, ? extends Node, ?>[] items) {
 		if(null!=items)
-		for(DOMBuilder<C, ? extends Node, ?> b : items)  append(b.node);
+		for(DOMBuilder<? extends C, ? extends Node, ?> b : items)  append(b.node);
 		return (S)this;
 	}
 
