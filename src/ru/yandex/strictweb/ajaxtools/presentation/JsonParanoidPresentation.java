@@ -1,5 +1,6 @@
 package ru.yandex.strictweb.ajaxtools.presentation;
 
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 public class JsonParanoidPresentation extends JsonPresentation {
@@ -13,22 +14,23 @@ public class JsonParanoidPresentation extends JsonPresentation {
         buf = writer;
     }
 	
-	@Override
-	public String safe(String s) {
+	public static Appendable staticSafe(Appendable buf, String s) throws IOException {
 	    int length = s.length();
-        StringBuilder buf = new StringBuilder(length + 2);
-        buf.append('"');
         for(int i=0; i<length;i++) {
             int c = s.charAt(i);
             if((c>='0'&&c<='9') || (c>='a'&&c<='z') || (c>='A'&&c<='Z') || c=='_' || c=='.') buf.append((char)c);
             else buf.append("\\u").append(hex[(c>>12)&0xf]).append(hex[(c>>8)&0xf]).append(hex[(c>>4)&0xf]).append(hex[c&0xf]);
         }
-        buf.append('"');
-		return buf.toString();
+        return buf;	    
 	}
 	
 	@Override
-	public String safeKey(String key) {
-		return safe(key) + ":";
+	public Appendable safe(String s) throws IOException {
+	    return staticSafe(buf.append('"'), s).append('"');
 	}
+
+    @Override
+	public Appendable safeKey(String key) throws IOException {
+	    return staticSafe(buf.append('"'), key).append("\":");
+	}	
 }

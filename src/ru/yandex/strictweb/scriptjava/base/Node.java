@@ -67,10 +67,15 @@ public class Node {
 
 	public Integer clientWidth, clientHeight;
 	public Integer clientLeft, clientTop;
+    public int nodeType;
 	
 	public void focus() {
 	}
 
 	public void blur() {
 	}
+
+    public Node[] getElementsByTagName(String tagName) {
+        return null;
+    }
 }
