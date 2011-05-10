@@ -46,6 +46,13 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 		if(constructor==null) {
 			parser.code.append("() {\n");
 		}
+		
+        if(null!=cl.type.getExtendsClause()) {
+            String superType = cl.type.getExtendsClause().toString();           
+    		if(!parser.hasAnnotation(IgnoreExtends.class.getSimpleName(), cl.type.getModifiers()) && !parser.classes.get(superType).isNative) {
+    		    parser.code.append(parser.getObfuscatedName(superType)+".call(this);\n");
+    		}
+        }
 
 		Map<String, JCVariableDecl> fields = new TreeMap<String, JCVariableDecl>();
 		
@@ -102,7 +109,7 @@ public class EntityCompilerPlugin implements CompilerPlugin {
 		if(null!=cl.type.getExtendsClause()) {
 			String superType = cl.type.getExtendsClause().toString();			
 			if(!parser.hasAnnotation(IgnoreExtends.class.getSimpleName(), cl.type.getModifiers()) && !parser.classes.get(superType).isNative) {
-				parser.code.append(parser.getObfuscatedName(StrictWeb.class.getSimpleName())+"."+parser.getObfuscatedName("extend") + "("+cl.name+".prototype, "+superType+".prototype)\n");
+				parser.code.append(parser.getObfuscatedName(StrictWeb.class.getSimpleName())+"."+parser.getObfuscatedName("extend") + "("+parser.getObfuscatedName(cl.name)+".prototype, "+parser.getObfuscatedName(superType)+".prototype)\n");
 			}
 		}		
 		

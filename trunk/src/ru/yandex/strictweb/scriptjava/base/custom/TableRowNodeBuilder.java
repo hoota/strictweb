@@ -18,7 +18,7 @@ public class TableRowNodeBuilder extends DOMBuilder<TableRowNode, TableColumnNod
 	 * Adds TD with text, if header is NULL - does nothing
 	 */
 	public TableRowNodeBuilder TDHW(String header, String width) {
-		return add(header==null ? null : new TableColumnNodeBuilder().width(width).text(header));
+		return add(header==null ? null : new TableColumnNodeBuilder().styleWidth(width).text(header));
 	}
 	
 	/**
