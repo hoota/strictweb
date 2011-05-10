@@ -594,4 +594,12 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	public S insertAfterN(DOMBuilder<? extends C, ? extends Node, ?> newChild, Node existed) {
 		return null;
 	}
+	
+
+    public static DOMBuilder wrap(Node node) {
+        if(node == null) return null;
+        DOMBuilder b = new NodeBuilder(null);
+        b.node = node;
+        return b;
+    }
 }

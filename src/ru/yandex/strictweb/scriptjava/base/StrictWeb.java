@@ -105,7 +105,7 @@ public class StrictWeb {
 	};
 
 	@NativeCode("{if(tagName!=null) return document.createElement(tagName);}")
-	final public static Node createNode(String tagName) {
+	final public static <N extends Node> N createNode(String tagName) {
 		return null;
 	}
 

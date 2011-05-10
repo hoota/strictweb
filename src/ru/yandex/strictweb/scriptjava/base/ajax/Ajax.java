@@ -80,8 +80,9 @@ public class Ajax {
 	
 	public void makeBatchRequests() {
 	    if(requestQueue.size() > 0) {
-	        makeRequest(true, requestQueue);
+	        List<AjaxRequest> queue = requestQueue; 
 	        requestQueue = StrictWeb.jsNewList();
+	        makeRequest(true, queue);
 	    }
 	    autoRequest = true;
 	}
