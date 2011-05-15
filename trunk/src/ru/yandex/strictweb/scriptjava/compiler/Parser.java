@@ -830,7 +830,10 @@ public class Parser implements CompilerPlugin {
 
             if (m.contains("(")) {
                 m = m.replaceFirst("\\(.*$", "");
-                m = Character.toLowerCase(m.charAt(3)) + m.substring(4);
+                if(m.matches("^[gs]et[A-Z].*$")) {
+                    // setters and getters
+                    m = Character.toLowerCase(m.charAt(3)) + m.substring(4);
+                }
             }
         }
         code.append('"' + m + '"');
@@ -1323,8 +1326,7 @@ public class Parser implements CompilerPlugin {
 			//parseMethodMainBlock(cl.constructor.parameters(), cl.constructor.getBody());
 			int numLocals = localVars.size();
 			parseParameters("(", cl.constructor.getParameters(), ")");
-			code.append("{this."+getObfuscatedName(cl.name+"_initInstanceFields") + "();this." + getObfuscatedName(cl.name + "_constructor"));
-			parseParameters("(", cl.constructor.getParameters(), ")");
+			code.append("{this."+getObfuscatedName(cl.name+"_initInstanceFields") + "();this." + getObfuscatedName(cl.name + "_constructor")+".apply(this, arguments)");
 			code.append(";}\n");
 			localVars.setSize(numLocals);
 		}
