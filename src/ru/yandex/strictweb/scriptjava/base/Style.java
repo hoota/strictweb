@@ -56,4 +56,6 @@ public class Style {
 	public String MozTransformOrigin;
     public String cursor;
     public int zIndex;
+    public Integer maxWidth;
+    public Integer maxHeight;
 }

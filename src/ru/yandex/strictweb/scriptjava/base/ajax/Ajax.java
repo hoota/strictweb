@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import ru.yandex.strictweb.ajaxtools.exception.AjaxException;
 import ru.yandex.strictweb.scriptjava.base.ActiveXObject;
 import ru.yandex.strictweb.scriptjava.base.CommonDelegate;
 import ru.yandex.strictweb.scriptjava.base.DOMBuilder;
@@ -364,7 +363,7 @@ public class Ajax {
 		.addPlugin(new EntityCompilerPlugin())
 		.addPlugin(new AjaxServiceHelperCompilerPlugin())
 		
-		.parseClass(AjaxException.class)
+//		.parseClass(AjaxException.class)
 		.parseClass(AjaxRequest.class)
 		.parseClass(AjaxRequestResult.class)
 		.parseClass(ActiveXObject.class)
