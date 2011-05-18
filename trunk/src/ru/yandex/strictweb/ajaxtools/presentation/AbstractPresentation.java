@@ -86,8 +86,7 @@ public abstract class AbstractPresentation implements Presentation {
 			if(!hashBegin(key, o)) return;
 			for(Object a : (Set)o) {
 				if(!first) addSeparator();
-//				presentOne(a.toString(), 1, false, true);
-				presentNumber(a.toString(), "1", true);
+				presentNumber(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), "1", true);
 				first = false;
 			}
 			hashEnd(key, o);
@@ -104,7 +103,8 @@ public abstract class AbstractPresentation implements Presentation {
 			for(Iterator<Map.Entry> i = ((Map)o).entrySet().iterator(); i.hasNext();) {
 				Map.Entry e = i.next();
 				if(!first) addSeparator();
-				presentOne(e.getKey().toString(), e.getValue(), true);
+				Object a = e.getKey();
+                presentOne(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), e.getValue(), true);
 				first = false;
 			}
 			hashEnd(key, o);

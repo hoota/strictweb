@@ -160,8 +160,8 @@ public class JsonRefPresentation implements Presentation {
 		} else if(o instanceof Set) {
 			objectBegin(key, o, '{');
 			for(Object a : (Set)o) {
-				if(!first) addSeparator();
-				presentNumber(a.toString(), "1");
+				if(!first) addSeparator();				
+				presentNumber(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), "1");
 				first = false;
 			}
 			objectEnd(key, '}');
@@ -179,7 +179,8 @@ public class JsonRefPresentation implements Presentation {
 			for(Iterator<Map.Entry> i = ((Map)o).entrySet().iterator(); i.hasNext();) {
 				Map.Entry e = i.next();
 				if(!first) addSeparator();
-				presentOne(e.getKey().toString(), e.getValue(), -1);
+				Object a = e.getKey();
+                presentOne(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), e.getValue(), -1);
 				first = false;
 			}
 			objectEnd(key, '}');
