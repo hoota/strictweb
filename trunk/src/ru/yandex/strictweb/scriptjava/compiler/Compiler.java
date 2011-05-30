@@ -50,11 +50,7 @@ public class Compiler {
 	private long lastFileModificationTime = 0;
 //	private char[] lastSource;
 
-	private StringBuilder code;
-	
 	public Compiler(String pathPrefix) throws Exception {
-		code = parser.code;
-		
 		this.pathPrefix = pathPrefix;
 		
 		this
@@ -161,10 +157,6 @@ public class Compiler {
 //		}
 //	}
 
-	public String getAllCode() {
-		return code.toString();
-	}	
-
 	public Compiler compile() throws Exception {
 		parser.compile();
 		
@@ -176,7 +168,7 @@ public class Compiler {
 		compile();
 		outputFile = new File(outputFileName);
 		save();
-		code.setLength(0);
+		parser.code.setLength(0);
 		return this;
 	}
 
@@ -198,7 +190,7 @@ public class Compiler {
 //			return;
 		}
 		OutputStream out = new FileOutputStream(outputFile);
-		byte[] buf = getAllCode().getBytes("utf8");
+		byte[] buf = parser.getAllCode().getBytes("utf8");
 		out.write(buf);
 		out.close();
 	}

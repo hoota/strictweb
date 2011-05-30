@@ -595,7 +595,7 @@ public class Parser implements CompilerPlugin {
 		code.append(close);
 	}
 	
-	public boolean hasAnnotation(String an, JCModifiers modifiers) {
+	public static boolean hasAnnotation(String an, JCModifiers modifiers) {
 		if(modifiers == null || modifiers.getAnnotations() == null) return false;
 		for(JCAnnotation a : modifiers.getAnnotations()) {
 //			System.out.println(a.annotationType);
@@ -851,11 +851,14 @@ public class Parser implements CompilerPlugin {
 			
 			if(checkForAjaxNameMagicMethod(mName, cl, code, arguments)) return true;
 			
+			ParsedMethod parsedMethod = cl.methods.get(mName);
+			if(null != parsedMethod) parsedMethod.invokeCount ++;
+			
 			if(null!=cl && cl.isEnum) {
 				if(mName.startsWith("get") || mName.startsWith("is")) {
 					mName = Character.toLowerCase(mName.charAt(3)) + mName.substring(4);
 				}
-				mName = cl.methods.get(mName).name;
+                mName = parsedMethod.name;
 				code.append(mName);
 				if(mName.equals("valueOf") || mName.equals("toString")) {
 					parseArguments("(", arguments, ")");						
@@ -1216,7 +1219,7 @@ public class Parser implements CompilerPlugin {
 					if(isStatic(method.getModifiers())) cl.staticMethods.add(mName); 
 					cl.methods.put(mName, new ParsedMethod(mName, method, cl));
 					//System.out.println(name+" :: "+mName+ " :: " + method.getReturnType2());
-				}				
+				}
 			}
 		}
 		
@@ -1420,6 +1423,11 @@ public class Parser implements CompilerPlugin {
 			boolean isFinal  = isFinal(m.getModifiers());
 			boolean isNative = hasAnnotation(NativeCode.class.getSimpleName(), m.getModifiers());
 			
+			ParsedMethod parsedMethod = cl.methods.get(mName);
+            if(parsedMethod != null && parsedMethod.mayBeExcluded) {
+			    code.append("/*method " + parsedMethod.id + " start*/\n");
+			}
+			
 			if(!isStatic && !isFinal && !isConstructor(m)) {
 				code.append(getObfuscatedName(cl.name) + ".prototype." + getObfuscatedName(cl.name + "_" + mName) + ifObfuscated("=", " =\n"));// + methodName +";\n");
 			}
@@ -1451,6 +1459,9 @@ public class Parser implements CompilerPlugin {
 				parseMethodMainBlock(m.getParameters(), m.getBody());
 			}
 
+            if(parsedMethod != null && parsedMethod.mayBeExcluded) {
+                code.append("/*method " + parsedMethod.id + " stop*/\n");
+            }
 			//code.append("\n");
 		}
 		code.append(ifObfuscated("", "\n"));	
@@ -1743,7 +1754,7 @@ public class Parser implements CompilerPlugin {
 			Method spInvMethod = this.getClass().getMethod(spInvMethodName, JCMethodInvocation.class);
 			spInvMethod.invoke(this, inv);
 		}catch(Exception e) {
-			for(int i=plugins.size()-1; i>=0; i--) {
+		    for(int i=plugins.size()-1; i>=0; i--) {
 				if(plugins.get(i).invokeMethod(mName, inv, inv.getArguments())) return;
 			}
 		}		
@@ -2035,4 +2046,20 @@ public class Parser implements CompilerPlugin {
 	public void addIgnoredClasses(Collection<String> ignoredClasses) {
 		this.ignoredClasses.addAll(ignoredClasses);
 	}
+
+    public String getAllCode() {
+        String allCode = code.toString();
+        
+        for(ParsedClass cl: classesList) {
+            for(ParsedMethod m: cl.methods.values()) if(m.mayBeExcluded && m.invokeCount == 0) {
+                Pattern p = Pattern.compile("\\/\\*method "+m.id+" start\\*\\/\n.*\\/\\*method "+m.id+" stop\\*\\/\n", Pattern.DOTALL);
+                allCode = p.matcher(allCode).replaceAll("");
+            }
+        }
+        
+        allCode = allCode.replaceAll("\\/\\*method [0-9]+-[0-9]+ start\\*\\/\n", "");
+        allCode = allCode.replaceAll("\\/\\*method [0-9]+-[0-9]+ stop\\*\\/\n", "");
+        
+        return allCode;
+    }
 }
