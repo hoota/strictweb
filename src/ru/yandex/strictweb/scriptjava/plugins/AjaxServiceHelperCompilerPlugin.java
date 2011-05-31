@@ -115,9 +115,9 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 	}
 	
 	private boolean checkForAjaxAsyncCallMagicMethod(String mName, ParsedClass cl, StringBuilder code, List<JCExpression> arguments) {
-		if(!cl.name.equals(StrictWeb.class.getSimpleName())
-			|| !mName.equals("ajaxAsyncCall")
-			|| arguments.size()!=2) return false;
+        if (!mName.equals("ajaxAsyncCall") || !cl.methods.get(mName).cl.name.equals(StrictWeb.class.getSimpleName()) || arguments.size() !=2) {
+            return false;
+        }
 		
 		while('.'==code.charAt(code.length()-1) || Character.isJavaIdentifierPart(code.charAt(code.length()-1))) {
 			code.setLength(code.length() - 1);
@@ -136,9 +136,9 @@ public class AjaxServiceHelperCompilerPlugin implements CompilerPlugin {
 	}
 	
 	   private boolean checkForAjaxAsyncCallWithErrorsMagicMethod(String mName, ParsedClass cl, StringBuilder code, List<JCExpression> arguments) {
-	        if(!cl.name.equals(StrictWeb.class.getSimpleName())
-	            || !mName.equals("ajaxAsyncCallWithErrors")
-	            || arguments.size()!=3) return false;
+	        if (!mName.equals("ajaxAsyncCallWithErrors") || !cl.methods.get(mName).cl.name.equals(StrictWeb.class.getSimpleName()) || arguments.size() != 3) {
+	            return false;
+	        }	        
 	        
 	        while('.'==code.charAt(code.length()-1) || Character.isJavaIdentifierPart(code.charAt(code.length()-1))) {
 	            code.setLength(code.length() - 1);

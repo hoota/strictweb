@@ -342,6 +342,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		return (S)this;
 	}
 
+    @MayBeExcluded
 	public S align(String a) {
 		node.align = a;
 		return (S)this;

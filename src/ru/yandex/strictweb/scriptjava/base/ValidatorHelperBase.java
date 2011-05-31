@@ -10,16 +10,19 @@ public class ValidatorHelperBase extends CommonElements {
 	public ValidatorHelperBase() {
     }
 	
+	@MayBeExcluded
 	public ValidatorHelperBase setIgnoreDisabledFields(boolean ignoreDisabledFields) {
         this.ignoreDisabledFields = ignoreDisabledFields;
         return this;
     }
 	
+    @MayBeExcluded
 	public ValidatorHelperBase setMsgClassName(String msgClassName) {
         this.msgClassName = msgClassName;
         return this;
     }
 
+    @MayBeExcluded
     public boolean validate(DOMBuilder root) {
 		try {
 			root.forEachSubchild(new CommonDelegate<Boolean, Node>() {
@@ -43,6 +46,7 @@ public class ValidatorHelperBase extends CommonElements {
 		}
 	}
 
+    @MayBeExcluded
 	public void showInvalidMessage(final Node n, String message) {
 		n.parentNode.insertBefore(
 			$DIV().className(msgClassName).text(message).node, 
