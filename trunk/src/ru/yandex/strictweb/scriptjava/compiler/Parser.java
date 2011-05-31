@@ -120,36 +120,28 @@ public class Parser implements CompilerPlugin {
 		ParsedClass cl = new ParsedClass("String", null);
 		cl.isNative = true;
 		classes.put(cl.name, cl);
-		ParsedMethod m = new ParsedMethod("split", null, cl);
-		m.retType = VarType.ARRAY(VarType.STRING);
+		ParsedMethod m = new ParsedMethod("split", null, cl, VarType.ARRAY(VarType.STRING));
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("trim", null, cl);
-		m.retType = VarType.STRING;
+		m = new ParsedMethod("trim", null, cl, VarType.STRING);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("toLowerCase", null, cl);
-		m.retType = VarType.STRING;
+		m = new ParsedMethod("toLowerCase", null, cl, VarType.STRING);
 		cl.methods.put(m.name, m);
 		
-		m = new ParsedMethod("toUpperCase", null, cl);
-		m.retType = VarType.STRING;
+		m = new ParsedMethod("toUpperCase", null, cl, VarType.STRING);
 		cl.methods.put(m.name, m);
 		
-		m = new ParsedMethod("replace", null, cl);
-		m.retType = VarType.STRING;
+		m = new ParsedMethod("replace", null, cl, VarType.STRING);
 		cl.methods.put(m.name, m);
 		
-		m = new ParsedMethod("substring", null, cl);
-		m.retType = VarType.STRING;
+		m = new ParsedMethod("substring", null, cl, VarType.STRING);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("charAt", null, cl);
-		m.retType = VarType.STRING;
+		m = new ParsedMethod("charAt", null, cl, VarType.STRING);
 		cl.methods.put(m.name, m);
 		
-		m = new ParsedMethod("indexOf", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("indexOf", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 	}
 
@@ -157,43 +149,35 @@ public class Parser implements CompilerPlugin {
 		ParsedClass cl = new ParsedClass("Math", null);
 		cl.isNative = true;
 		classes.put(cl.name, cl);
-		ParsedMethod m = new ParsedMethod("round", null, cl);
-		m.retType = VarType.NUMBER;
+		ParsedMethod m = new ParsedMethod("round", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 		cl.staticMethods.add(m.name);
 		
-		m = new ParsedMethod("floor", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("floor", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 		cl.staticMethods.add(m.name);
 		
-		m = new ParsedMethod("min", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("min", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 		cl.staticMethods.add(m.name);
 
-		m = new ParsedMethod("max", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("max", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 		cl.staticMethods.add(m.name);
 		
-		m = new ParsedMethod("random", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("random", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 		cl.staticMethods.add(m.name);
 
-		m = new ParsedMethod("sin", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("sin", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 		cl.staticMethods.add(m.name);
 
-		m = new ParsedMethod("cos", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("cos", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 		cl.staticMethods.add(m.name);
 
-		m = new ParsedMethod("abs", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("abs", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 		cl.staticMethods.add(m.name);
 	}
@@ -209,52 +193,40 @@ public class Parser implements CompilerPlugin {
 		ParsedClass cl = new ParsedClass("Date", null);
 		cl.isNative = true;
 		classes.put(cl.name, cl);
-		ParsedMethod m = new ParsedMethod("getDate", null, cl);
-		m.retType = VarType.NUMBER;
+		ParsedMethod m = new ParsedMethod("getDate", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("setDate", null, cl);
-		m.retType = VarType.VOID;
+		m = new ParsedMethod("setDate", null, cl, VarType.VOID);
 		cl.methods.put(m.name, m);
 		
-		m = new ParsedMethod("setMonth", null, cl);
-		m.retType = VarType.VOID;
+		m = new ParsedMethod("setMonth", null, cl, VarType.VOID);
 		cl.methods.put(m.name, m);
 				
-		m = new ParsedMethod("getMonth", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("getMonth", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("setHours", null, cl);
-		m.retType = VarType.VOID;
+		m = new ParsedMethod("setHours", null, cl, VarType.VOID);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("getHours", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("getHours", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("setMinutes", null, cl);
-		m.retType = VarType.VOID;
+		m = new ParsedMethod("setMinutes", null, cl, VarType.VOID);
 		cl.methods.put(m.name, m);
 		
-		m = new ParsedMethod("getMinutes", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("getMinutes", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("getSeconds", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("getSeconds", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("getTime", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("getTime", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("getDay", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("getDay", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 
-		m = new ParsedMethod("toGMTString", null, cl);
-		m.retType = VarType.NUMBER;
+		m = new ParsedMethod("toGMTString", null, cl, VarType.NUMBER);
 		cl.methods.put(m.name, m);
 	}
 	
@@ -283,22 +255,18 @@ public class Parser implements CompilerPlugin {
 //		cl.skipInnerObfuscation = true;
 		classes.put(eName, cl);
 		VarType clType = new VarType(cl);
-		ParsedMethod valuesMethod = new ParsedMethod("values", null, cl);
-		valuesMethod.retType = VarType.ARRAY(cl.varType);
+		ParsedMethod valuesMethod = new ParsedMethod("values", null, cl, VarType.ARRAY(cl.varType));
 		cl.methods.put(valuesMethod.name, valuesMethod);
 		cl.staticMethods.add(valuesMethod.name);
 		
-		ParsedMethod valueOf = new ParsedMethod("valueOf", null, cl);
-		valueOf.retType = cl.varType;
+		ParsedMethod valueOf = new ParsedMethod("valueOf", null, cl, cl.varType);
 		cl.methods.put(valueOf.name, valueOf);
 		cl.staticMethods.add(valueOf.name);
 
-		ParsedMethod toString = new ParsedMethod("toString", null, cl);
-		toString.retType = VarType.STRING;
+		ParsedMethod toString = new ParsedMethod("toString", null, cl, VarType.STRING);
 		cl.methods.put(toString.name, toString);
 		
-		ParsedMethod nameMethod = new ParsedMethod("toString", null, cl);
-		nameMethod.retType = VarType.STRING;
+		ParsedMethod nameMethod = new ParsedMethod("toString", null, cl, VarType.STRING);
 		cl.methods.put("name", nameMethod);
 
 		
@@ -329,9 +297,8 @@ public class Parser implements CompilerPlugin {
 					mName = Character.toLowerCase(mName.charAt(3)) + mName.substring(4);
 				}
 				Object value = m.invoke(enumObj);
-				ParsedMethod pm = new ParsedMethod(m.getName(), null, cl);
-				pm.retType = drawEnumFieldOrMethod(mName, value);
-				if(null!=pm.retType) {
+				ParsedMethod pm = new ParsedMethod(m.getName(), null, cl, drawEnumFieldOrMethod(mName, value));
+				if(null != pm.retType) {
 					cl.methods.put(m.getName(), pm);
 				}
 			}
@@ -700,8 +667,7 @@ public class Parser implements CompilerPlugin {
 
 		for(Method m : claz.getMethods()) {
 		    if(ClassMethodsInfo.isSetter(m)) {
-	            ParsedMethod pm = new ParsedMethod(m.getName(), null, cl);
-	            pm.retType = VarType.VOID;
+	            ParsedMethod pm = new ParsedMethod(m.getName(), null, cl, VarType.VOID);
                 cl.methods.put(pm.name, pm);		        
 		    }
 		    
@@ -710,9 +676,8 @@ public class Parser implements CompilerPlugin {
 		        && !m.isAnnotationPresent(AjaxTransient.class)
 		        && (!m.isAnnotationPresent(Transient.class) || m.isAnnotationPresent(Presentable.class))) {
 
-		        ParsedMethod pm = new ParsedMethod(m.getName(), null, cl);
 		        try {
-		            pm.retType = new VarType(m.getGenericReturnType());
+		            ParsedMethod pm = new ParsedMethod(m.getName(), null, cl, new VarType(m.getGenericReturnType()));
 		            cl.methods.put(pm.name, pm);
 		        }catch(Throwable th) {
 		            System.err.println("Warning: " + th.getMessage());
@@ -809,10 +774,12 @@ public class Parser implements CompilerPlugin {
 	}
 
 	Pattern ajaxNamePattern = Pattern.compile("([^\\.]+)$");
+    private ParsedMethod currentParsedMethod;
 	
     private boolean checkForAjaxNameMagicMethod(String mName, ParsedClass cl, StringBuilder code, List<JCExpression> arguments) {
-        if (!cl.name.equals(StrictWeb.class.getSimpleName()) || !mName.equals("ajaxName") || arguments.size() != 1)
+        if (!mName.equals("ajaxName") || !cl.methods.get(mName).cl.name.equals(StrictWeb.class.getSimpleName()) || arguments.size() != 1) {
             return false;
+        }
 
         while ('.' == code.charAt(code.length() - 1) || Character.isJavaIdentifierPart(code.charAt(code.length() - 1))) {
             code.setLength(code.length() - 1);
@@ -852,7 +819,9 @@ public class Parser implements CompilerPlugin {
 			if(checkForAjaxNameMagicMethod(mName, cl, code, arguments)) return true;
 			
 			ParsedMethod parsedMethod = cl.methods.get(mName);
-			if(null != parsedMethod) parsedMethod.invokeCount ++;
+			if(null != parsedMethod) {
+			    parsedMethod.invokeCounter.inc(currentParsedMethod);
+			}
 			
 			if(null!=cl && cl.isEnum) {
 				if(mName.startsWith("get") || mName.startsWith("is")) {
@@ -1217,7 +1186,7 @@ public class Parser implements CompilerPlugin {
 					
 					myProperties.add(mName);
 					if(isStatic(method.getModifiers())) cl.staticMethods.add(mName); 
-					cl.methods.put(mName, new ParsedMethod(mName, method, cl));
+					cl.methods.put(mName, new ParsedMethod(mName, method, cl, null));
 					//System.out.println(name+" :: "+mName+ " :: " + method.getReturnType2());
 				}
 			}
@@ -1423,9 +1392,9 @@ public class Parser implements CompilerPlugin {
 			boolean isFinal  = isFinal(m.getModifiers());
 			boolean isNative = hasAnnotation(NativeCode.class.getSimpleName(), m.getModifiers());
 			
-			ParsedMethod parsedMethod = cl.methods.get(mName);
-            if(parsedMethod != null && parsedMethod.mayBeExcluded) {
-			    code.append("/*method " + parsedMethod.id + " start*/\n");
+			currentParsedMethod = cl.methods.get(mName);
+            if(currentParsedMethod != null && currentParsedMethod.mayBeExcluded) {
+			    code.append("/*method " + currentParsedMethod.id + " start*/\n");
 			}
 			
 			if(!isStatic && !isFinal && !isConstructor(m)) {
@@ -1459,9 +1428,10 @@ public class Parser implements CompilerPlugin {
 				parseMethodMainBlock(m.getParameters(), m.getBody());
 			}
 
-            if(parsedMethod != null && parsedMethod.mayBeExcluded) {
-                code.append("/*method " + parsedMethod.id + " stop*/\n");
+            if(currentParsedMethod != null && currentParsedMethod.mayBeExcluded) {
+                code.append("/*method " + currentParsedMethod.id + " stop*/\n");
             }
+            currentParsedMethod = null;
 			//code.append("\n");
 		}
 		code.append(ifObfuscated("", "\n"));	
@@ -1728,7 +1698,7 @@ public class Parser implements CompilerPlugin {
 				if(cl.staticMethods.contains(mName)) {
 					ParsedMethod m = cl.methods.get(mName);
 					code.append(getObfuscatedName(m.cl));
-					currentType = m.cl.varType;
+					currentType = cl.varType;
 					break;
 				} else if(cl.methods.containsKey(mName)) {
 					code.append(cl.selfPrefix);
@@ -2051,9 +2021,16 @@ public class Parser implements CompilerPlugin {
         String allCode = code.toString();
         
         for(ParsedClass cl: classesList) {
-            for(ParsedMethod m: cl.methods.values()) if(m.mayBeExcluded && m.invokeCount == 0) {
+            methods: for(ParsedMethod m: cl.methods.values()) if(m.cl == cl && m.mayBeExcluded) {
+
+                int count = m.invokeCounter.count;
+                if(count > 0 && m.invokeCounter.invokers.size() > 0) {
+                    for(ParsedMethod inv: m.invokeCounter.invokers.keySet()) 
+                        if(!inv.mayBeExcluded || inv.invokeCounter.count > 0) continue methods;
+                }
                 Pattern p = Pattern.compile("\\/\\*method "+m.id+" start\\*\\/\n.*\\/\\*method "+m.id+" stop\\*\\/\n", Pattern.DOTALL);
                 allCode = p.matcher(allCode).replaceAll("");
+//                System.out.println("Exclude " + m.cl.name+"::"+m.name);
             }
         }
         
