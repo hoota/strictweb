@@ -1647,13 +1647,17 @@ public class Parser implements CompilerPlugin {
 	
 	public String getObfuscatedName(String n) {
 		if(!obfuscate || n.length()<3) return n;
-		String on = obfuscatedNames.get(n);
+		return getObfuscatedForce(n);
+	}
+
+    private String getObfuscatedForce(String n) {
+        String on = obfuscatedNames.get(n);
 		if(on == null) {
 //			obfuscatedNames.put(n, on = "/*"+n+"*/$"+Integer.toString(obfuscatedNames.size(), 36));
 			obfuscatedNames.put(n, on = "$"+Integer.toString(obfuscatedNames.size(), 36));
 		}
 		return on;
-	}
+    }
 
 	public void parseJCTree_JCIdent(com.sun.tools.javac.tree.JCTree.JCIdent node) {
 		parseSimpleName(node, node.toString());		
@@ -1822,8 +1826,8 @@ public class Parser implements CompilerPlugin {
 			currentType = null;
 		} else { //if(currentType.nameIs("List") || currentType.nameIs("Collection") || currentType.isArray()) {
 			currentType = null;
-			String indexName = "_i" + getTempIndex();
-			String listName  = "_list" + getTempIndex();
+			String indexName = getObfuscatedForce("_i" + getTempIndex());
+			String listName  = getObfuscatedForce("_list" + getTempIndex());
 			code.append("{var "+listName+"=");
 			parse(node.getExpression());			
 			code.append(";");
