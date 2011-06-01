@@ -21,7 +21,7 @@ public class ValidatorHelperBase extends CommonElements {
         this.msgClassName = msgClassName;
         return this;
     }
-
+    
     @MayBeExcluded
     public boolean validate(DOMBuilder root) {
 		try {
@@ -31,9 +31,13 @@ public class ValidatorHelperBase extends CommonElements {
 					
 					if(n.className == msgClassName) n.parentNode.removeChild(n);
 					else
-					if(null != n.validator && !n.validator.isValid(n)) {
-						showInvalidMessage(n, n.validator.getMessage());
-						throw new RuntimeException();
+					if(null != n.validator) {
+					    boolean isValid = n.validator.isValid(n);
+					    decorateElement(n, isValid);
+					    if(!isValid) {
+    						showInvalidMessage(n, n.validator.getMessage());
+    						throw new RuntimeException();
+					    }
 					}
 					
 					return true;
@@ -47,11 +51,12 @@ public class ValidatorHelperBase extends CommonElements {
 	}
 
     @MayBeExcluded
+    public void decorateElement(Node n, boolean isValid) {
+    }
+
+    @MayBeExcluded
 	public void showInvalidMessage(final Node n, String message) {
-		n.parentNode.insertBefore(
-			$DIV().className(msgClassName).text(message).node, 
-			n//.parentNode.firstChild
-		);
+        drawInvalidMessage(n, message);
 		
 		n.focus();
 		StrictWeb.setTimeout(new VoidDelegate<TimeoutIdentifier>() {
@@ -65,4 +70,9 @@ public class ValidatorHelperBase extends CommonElements {
 		}, 100);
 		
 	}
+
+    public void drawInvalidMessage(final Node n, String message) {
+        Node errorNode = $DIV().className(msgClassName).text(message).node;
+        n.parentNode.insertBefore(errorNode, n);
+    }
 }
