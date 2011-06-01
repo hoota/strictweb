@@ -1303,6 +1303,7 @@ public class Parser implements CompilerPlugin {
 			localVars.setSize(numLocals);
 		}
 		
+		if(ignoredClasses.contains(cl.name)) return true;		
 		code.append(ifObfuscated("", "\n"));
 		
 		String superType = null;
