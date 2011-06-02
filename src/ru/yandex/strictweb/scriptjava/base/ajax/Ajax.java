@@ -81,7 +81,7 @@ public class Ajax {
 	    if(requestQueue.size() > 0) {
 	        List<AjaxRequest> queue = requestQueue; 
 	        requestQueue = StrictWeb.jsNewList();
-	        makeRequest(true, queue);
+	        makeRequest(true, queue, null);
 	    }
 	    autoRequest = true;
 	}
@@ -93,14 +93,14 @@ public class Ajax {
 	    if(!async || autoRequest) {
 	        List<AjaxRequest> requests = StrictWeb.jsNewList();
 	        requests.add(new AjaxRequest(clazz, method, args, callBack, errorHandler));
-	        return makeRequest(async, requests);
+	        return makeRequest(async, requests, errorHandler);
 	    } else {
 	        requestQueue.add(new AjaxRequest(clazz, method, args, callBack, errorHandler));
             return null;
 	    }
     }
     
-	Object makeRequest(boolean async, final List<AjaxRequest> requests) {
+	Object makeRequest(boolean async, final List<AjaxRequest> requests, final VoidDelegate<Throwable> errorHandler) {
 	    onError(null);
 	    
         XMLHttpRequest request = getHttpRequest();
@@ -113,7 +113,6 @@ public class Ajax {
 	            + objectToXml(r.args, null).replaceAll("%", "%25").replaceAll("&", "%26").replaceAll(";", "%3B").replaceAll("\\+", "%2B");
 	    }
         
-        Log.info(postXml);
 	   
 		final String url = getRequestUrl(requests);
 		
@@ -126,20 +125,24 @@ public class Ajax {
 				public void voidDelegate(XMLHttpRequest request) {
 					if(request.readyState == 4) {
 				        eventTargetEnable(eventTargetNodes);
-					    AjaxRequestResult[] results = parseRequestResult(request, url, requests);
-					    for(int i=0; i<results.length; i++) {
-					        AjaxRequestResult res = results[i];
-                            AjaxRequest req = requests.get(i);
-					        Throwable error = res.getError();
-					        if(error != null) {
-					            throwError("Ajax.call("+req.method+"): server-side exception"
-					                , error
-					                , req.errorHandler
-					            );
-					        } else {
-					            req.callBack.voidDelegate(res.data);
-					        }
-					    }
+				        if(request.status == 200) {
+    					    AjaxRequestResult[] results = parseRequestResult(request, url, requests);
+    					    for(int i=0; i<results.length; i++) {
+    					        AjaxRequestResult res = results[i];
+                                AjaxRequest req = requests.get(i);
+    					        Throwable error = res.getError();
+    					        if(error != null) {
+    					            throwError("Ajax.call("+req.method+"): server-side exception"
+    					                , error
+    					                , req.errorHandler
+    					            );
+    					        } else {
+    					            req.callBack.voidDelegate(res.data);
+    					        }
+    					    }
+				        } else {
+				            throwError("Error status: " + request.status, null, errorHandler);
+				        }
 					}
 				}
 			});
@@ -147,6 +150,9 @@ public class Ajax {
 		
 		postXml = getQueryString(requests) + postXml;
 		request.open("POST", url, async, null, null);
+
+		Log.info(url + " :: " + postXml);
+        
 		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		request.send(postXml);
 		
@@ -182,6 +188,8 @@ public class Ajax {
 				    evalResult = StrictWeb.evalFunction("return " + responseText);
 				}
 				result = requests.size()==1 ? new AjaxRequestResult[] {(AjaxRequestResult)evalResult}: (AjaxRequestResult[])evalResult;
+				Log.debug("Ajax result:");
+				Log.debug(result);
 			}catch(Throwable e) {
 				throwError("Ajax.call("+getMethodsNames(requests)+"): eval error", e, null);
 			}

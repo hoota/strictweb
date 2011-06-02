@@ -6,6 +6,7 @@ import ru.yandex.strictweb.scriptjava.base.util.TimeoutIdentifier;
 public class ValidatorHelperBase extends CommonElements {
 	public String msgClassName = "invalidFieldMessage";
 	public boolean ignoreDisabledFields = true;
+    private boolean hasError;
 	
 	public ValidatorHelperBase() {
     }
@@ -25,6 +26,7 @@ public class ValidatorHelperBase extends CommonElements {
     @MayBeExcluded
     public boolean validate(DOMBuilder root) {
 		try {
+		    hasError = false;
 			root.forEachSubchild(new CommonDelegate<Boolean, Node>() {
 				public Boolean delegate(Node n) {
 					if(ignoreDisabledFields && n.field == DOMBuilder.DISABLED) return false;
@@ -33,10 +35,10 @@ public class ValidatorHelperBase extends CommonElements {
 					else
 					if(null != n.validator) {
 					    boolean isValid = n.validator.isValid(n);
-					    decorateElement(n, isValid);
+					    decorateElement(n, n.validator.getMessage(), isValid);
 					    if(!isValid) {
-    						showInvalidMessage(n, n.validator.getMessage());
-    						throw new RuntimeException();
+    						hasError = true;
+//    						throw new RuntimeException();
 					    }
 					}
 					
@@ -44,35 +46,31 @@ public class ValidatorHelperBase extends CommonElements {
 				}
 			});
 			
-			return true;
+			return !hasError;
 		}catch(RuntimeException e) {
 			return false;
 		}
 	}
 
-    @MayBeExcluded
-    public void decorateElement(Node n, boolean isValid) {
-    }
-
-    @MayBeExcluded
-	public void showInvalidMessage(final Node n, String message) {
-        drawInvalidMessage(n, message);
-		
-		n.focus();
-		StrictWeb.setTimeout(new VoidDelegate<TimeoutIdentifier>() {
-			public void voidDelegate(TimeoutIdentifier arg) {
-				int top = 0;
-				for(Node q = n; q!=null && q.offsetTop>0; q = q.offsetParent) top += q.offsetTop;
-				if(top - StrictWeb.document.body.scrollTop < 50) {
-					StrictWeb.window.scrollBy(0, -100);
-				}
-			}
-		}, 100);
-		
-	}
-
-    public void drawInvalidMessage(final Node n, String message) {
+	public void decorateElement(final Node n, String message, boolean isValid) {
         Node errorNode = $DIV().className(msgClassName).text(message).node;
         n.parentNode.insertBefore(errorNode, n);
+        
+		focusOnInput(n, message, isValid);
+	}
+
+    public void focusOnInput(final Node n, String message, boolean isValid) {
+        if(!isValid && !hasError) {
+		    n.focus();
+		    StrictWeb.setTimeout(new VoidDelegate<TimeoutIdentifier>() {
+		        public void voidDelegate(TimeoutIdentifier arg) {
+		            int top = 0;
+		            for(Node q = n; q!=null && q.offsetTop>0; q = q.offsetParent) top += q.offsetTop;
+		            if(top - StrictWeb.document.body.scrollTop < 50) {
+		                StrictWeb.window.scrollBy(0, -100);
+		            }
+		        }
+		    }, 100);
+		}
     }
 }
