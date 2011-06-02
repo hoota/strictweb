@@ -26,6 +26,7 @@ public class Node {
 	public Object temp2;
 	public Object temp3;
 	public String width;
+    public String height;
 	public String vAlign;
 	public String src;
 	public String title;
