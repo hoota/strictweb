@@ -272,6 +272,12 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	}
 	
     @MayBeExcluded
+    public S height(String width) {
+        node.height = width;
+        return (S)this;
+    }
+    
+    @MayBeExcluded
 	public S method(String method) {
 		node.method = method;
 		return (S)this;
@@ -531,6 +537,12 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		return (S)this;
 	}
 	
+    @MayBeExcluded
+    @NativeCode("{this.%node%[key] = value; return this;}")
+    public S attribute(String key, Object value) {
+        return (S)this;
+    }
+    
     @MayBeExcluded
 	public S styleOpacity(double o) {
 	    node.style.opacity = o;
