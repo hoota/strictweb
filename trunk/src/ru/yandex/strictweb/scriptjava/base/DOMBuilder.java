@@ -202,7 +202,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
     @MayBeExcluded
 	public S addAll(DOMBuilder<? extends C, ? extends Node, ?>[] items) {
 		if(null!=items)
-		for(DOMBuilder<? extends C, ? extends Node, ?> b : items)  append(b.node);
+		for(DOMBuilder<? extends C, ? extends Node, ?> b : items) if(b!=null) append(b.node);
 		return (S)this;
 	}
 
