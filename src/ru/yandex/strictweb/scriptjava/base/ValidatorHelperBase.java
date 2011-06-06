@@ -36,10 +36,7 @@ public class ValidatorHelperBase extends CommonElements {
 					if(null != n.validator) {
 					    boolean isValid = n.validator.isValid(n);
 					    decorateElement(n, n.validator.getMessage(), isValid);
-					    if(!isValid) {
-    						hasError = true;
-//    						throw new RuntimeException();
-					    }
+					    if(!isValid) hasError = true;
 					}
 					
 					return true;
@@ -53,10 +50,12 @@ public class ValidatorHelperBase extends CommonElements {
 	}
 
 	public void decorateElement(final Node n, String message, boolean isValid) {
-        Node errorNode = $DIV().className(msgClassName).text(message).node;
-        n.parentNode.insertBefore(errorNode, n);
-        
-		focusOnInput(n, message, isValid);
+	    if(!isValid) {
+            Node errorNode = $DIV().className(msgClassName).text(message).node;
+            n.parentNode.insertBefore(errorNode, n);
+            
+    		focusOnInput(n, message, isValid);
+	    }
 	}
 
     public void focusOnInput(final Node n, String message, boolean isValid) {
