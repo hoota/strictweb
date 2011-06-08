@@ -29,7 +29,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	}
 	
     @MayBeExcluded
-	@NativeCode("{this.%node%[eventName](%StrictWeb%.%globalEvent%);return this;}")
+	@NativeCode("{if(this.%node%[eventName])this.%node%[eventName](%StrictWeb%.%globalEvent%);return this;}")
 	final public S fireEvent(String eventName) {
 		return (S)this;
 	}
