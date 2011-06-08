@@ -135,7 +135,8 @@ public class RePresentation {
 			if(type==null || !(type instanceof ParameterizedType))
 				throw new RePresentationException(clazz);
 
-			Collection<Object> col = List.class.isAssignableFrom(clazz) ? new ArrayList<Object>() : 
+			boolean isList = List.class.isAssignableFrom(clazz);
+			Collection<Object> col = isList ? new ArrayList<Object>() : 
 				(HashSet.class.isAssignableFrom(clazz) ? new HashSet<Object>() : new TreeSet<Object>());
 			
 			ParameterizedType pType = (ParameterizedType) type;
@@ -147,7 +148,11 @@ public class RePresentation {
 			
 			for(int i=0; i<node.getChildNodes().getLength(); i++) {
 				Node n = node.getChildNodes().item(i);
-				if(n.getNodeType()==Node.ELEMENT_NODE) col.add(getObject(n, c, t));
+				if(n.getNodeType()==Node.ELEMENT_NODE) {
+				    Node id = isList ? null : n.getAttributes().getNamedItem("id");
+				     
+				    col.add(getObject(id!=null ? id : n, c, t));
+				}
 			}
 			return col;
 		} else if(ClassMethodsInfo.isPresentableOrEntity(clazz)) {

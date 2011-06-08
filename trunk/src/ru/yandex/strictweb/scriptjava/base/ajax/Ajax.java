@@ -124,7 +124,10 @@ public class Ajax {
 			StrictWeb.setVoidEventCallback(request, EV_ONREADYSTATECHANGE, new VoidDelegate<XMLHttpRequest>() {
 				public void voidDelegate(XMLHttpRequest request) {
 					if(request.readyState == 4) {
+					    
+					    StrictWeb.setVoidEventCallback(request, EV_ONREADYSTATECHANGE, null);
 				        eventTargetEnable(eventTargetNodes);
+				        
 				        if(request.status == 200) {
     					    AjaxRequestResult[] results = parseRequestResult(request, url, requests);
     					    for(int i=0; i<results.length; i++) {
