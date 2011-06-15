@@ -143,7 +143,7 @@ public class CommonElements extends StrictWeb {
     }
 
     @MayBeExcluded
-    public static final NodeBuilder $RADIO(String name, boolean checked) {
-        return EL("input").className("cb").type("radio").name(name).checked(checked);
+    public static final NoChildNodeBuilder $RADIO(String name, boolean checked) {
+        return new NoChildNodeBuilder("input").className("cb").type("radio").name(name).checked(checked);
     }	
 }

@@ -1,5 +1,6 @@
 package ru.yandex.strictweb.scriptjava.compiler;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,13 +87,20 @@ public class VarType {
 			Class c = (Class)gType;
 			if(c.isArray()) {
 				name = ARRAY;
-				parameters = new ArrayList<VarType>();
+				parameters = new ArrayList<VarType>(1);
 				parameters.add(new VarType(c.getComponentType()));
 			} else {
 				name = c.getSimpleName();
 			}
 //			System.out.println(name + " :: " + c.isArray());
-		} else {
+		} else if(gType instanceof ParameterizedType) {
+		    ParameterizedType pt = (ParameterizedType)gType;
+		    if(pt.getRawType() == List.class) {
+                name = ARRAY;
+                parameters = new ArrayList<VarType>(1);
+                parameters.add(new VarType(pt.getActualTypeArguments()[0]));		        
+		    }
+        } else {
 			throw new RuntimeException("Unknown type: " + gType);
 		}
 	}

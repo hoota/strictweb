@@ -102,7 +102,7 @@ public class RePresentation {
             long ts = parseDate(value);
             return ts==-1 ? null : new Date(ts);
 		} else if(clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
-			return (boolean)(null!=value && value.equals("1"));
+			return (boolean)(null!=value && (value.equals("1") || value.equals("true")));
 		}
 		throw new RePresentationException(clazz);
 	}
