@@ -618,8 +618,12 @@ public class Parser implements CompilerPlugin {
 	Class<?> getClassSafe(String typeName) {
 		try {
 			return Class.forName(typeName);
-		}catch(Throwable th) {
-			return null;
+		}catch(Throwable th) {		    
+	        try {
+	            return Class.forName(typeName.replaceFirst("\\.([^\\.]+)$", "\\$$1"));
+	        }catch(Throwable th1) {          
+	            return null;
+	        }       
 		}		
 	}
 	
@@ -705,7 +709,6 @@ public class Parser implements CompilerPlugin {
 		if(cl != null) return cl;
 		
 		String suffix = "." + typeName;
-//		System.out.println(currentImports);
 		for(String fcn : currentImports) {
 			if(fcn.endsWith(suffix)) {
 				cl = getClassSafe(fcn);

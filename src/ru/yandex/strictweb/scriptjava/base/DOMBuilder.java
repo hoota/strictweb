@@ -125,6 +125,12 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 		node.className = className;
 		return (S)this;
 	}
+    
+    @MayBeExcluded
+    public S addClass(String className) {
+        node.className += " " + className;
+        return (S)this;
+    }    
 
     @MayBeExcluded
 	public S href(String href) {
