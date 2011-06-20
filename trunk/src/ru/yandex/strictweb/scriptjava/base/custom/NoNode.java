@@ -4,6 +4,6 @@ import ru.yandex.strictweb.scriptjava.base.Native;
 import ru.yandex.strictweb.scriptjava.base.Node;
 
 @Native
-public class NoNode extends Node {
+abstract public class NoNode extends Node {
 	private NoNode() {}
 }

@@ -544,7 +544,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	}
 	
     @MayBeExcluded
-    @NativeCode("{this.%node%[key] = value; return this;}")
+    @NativeCode("{this.%node%.setAttribute(key, value); return this;}")
     public S attribute(String key, Object value) {
         return (S)this;
     }
