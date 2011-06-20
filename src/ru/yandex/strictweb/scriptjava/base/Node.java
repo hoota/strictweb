@@ -1,8 +1,8 @@
 package ru.yandex.strictweb.scriptjava.base;
 
 @Native
-public class Node {
-	public String className;
+abstract public class Node {
+    public String className;
 	public String href;
 	public Style style;
 	public Node offsetParent;
@@ -55,28 +55,21 @@ public class Node {
 	public String htmlFor;
 	public Document ownerDocument;
 	
-	protected Node() {}
-
-	public void appendChild(Node child) {
-	}
+	abstract public void appendChild(Node child);
 	
-	public void insertBefore(Node newChild, Node existed) {		
-	}
+	abstract public void insertBefore(Node newChild, Node existed);
 
-	public void removeChild(Node child) {
-	}
+	abstract public void removeChild(Node child);
 
 	public Integer clientWidth, clientHeight;
 	public Integer clientLeft, clientTop;
     public int nodeType;
 	
-	public void focus() {
-	}
+    abstract public void focus();
 
-	public void blur() {
-	}
+	abstract public void blur();
 
-    public Node[] getElementsByTagName(String tagName) {
-        return null;
-    }
+	abstract public Node[] getElementsByTagName(String tagName);
+    
+    abstract public void setAttribute(String name, Object value);
 }

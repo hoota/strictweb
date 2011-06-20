@@ -1,7 +1,7 @@
 package ru.yandex.strictweb.scriptjava.base;
 
 @Native
-public class Document extends Node {
+abstract public class Document extends Node {
 	/**
 	 * Returns a semicolon-separated list of the cookies for that document or sets a single cookie.
 	 */
