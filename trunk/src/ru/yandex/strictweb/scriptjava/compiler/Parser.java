@@ -1521,7 +1521,7 @@ public class Parser implements CompilerPlugin {
 			String ip = indentPrefix;
 			if(debugLevel > 0) indentPrefix += "\t";
 			if(null == claz || !claz.isInterface) {
-				code.append(getObfuscatedName(StrictWeb.class.getSimpleName())+"."+getObfuscatedName("extend")+"(new " + getObfuscatedName(type.getName()));
+				code.append(getObfuscatedName(StrictWeb.class.getSimpleName())+"."+getObfuscatedName("extend")+"(new " + getObfuscatedName(claz));
 				parseArguments("(", node.getArguments(), ")");
 				code.append(", {");
 			} else code.append("{");
@@ -1529,6 +1529,9 @@ public class Parser implements CompilerPlugin {
 			code.append(indentPrefix);
 			
 			ParsedClass cl = createNewParsedClass(getTempIndex()+type.getName(), node.clazz, null, acl.getMembers(), null);
+			cl.isNative = claz.isNative;
+			cl.skipInnerObfuscation = claz.skipInnerObfuscation;
+			
 			currentClass.add(cl);
 			cl.skipInnerObfuscation = claz.skipInnerObfuscation;
 			for(Object o : acl.getMembers()) {
@@ -1536,14 +1539,15 @@ public class Parser implements CompilerPlugin {
 					JCVariableDecl f = (JCVariableDecl)o;
 					if(i>0) code.append(","+indentPrefix);
 					i++;
-					code.append(getObfuscatedName(f.getName().toString(), cl.skipInnerObfuscation) + ": ");
+					code.append(getObfuscatedName(f.getName().toString(), cl.skipInnerObfuscation || cl.isNative) + ": ");
 					parse(f.getInitializer());
 				}
 				if(o instanceof JCMethodDecl) {
 					if(i>0) code.append(","+indentPrefix);
 					i++;
 					JCMethodDecl m = (JCMethodDecl)o;
-					code.append(getObfuscatedName(m.getName().toString(), cl.skipInnerObfuscation) + ": function");
+//					System.out.println(m.getName().toString() + " :: " + cl.skipInnerObfuscation + " :: " + cl.isNative);
+					code.append(getObfuscatedName(m.getName().toString(), cl.skipInnerObfuscation || cl.isNative) + ": function");
 					parseMethodMainBlock(m.getParameters(), m.getBody());
 				}
 			}
