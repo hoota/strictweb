@@ -214,7 +214,7 @@ public class StrictWeb {
 	}
 	
     @MayBeExcluded
-	@NativeCode("{return list.sort(comparator.%compare%);}")
+	@NativeCode("{return list.sort(comparator.compare);}")
 	public static <T> List<T> jsSortList(List<T> list, Comparator<T> comparator) {
 		return null;
 	}
