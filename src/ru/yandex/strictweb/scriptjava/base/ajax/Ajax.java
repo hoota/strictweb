@@ -222,7 +222,7 @@ public class Ajax {
 	    return methods;
 	}
 	
-	void eventTargetDisable(Node[] eventTargetNodes) {
+	public void eventTargetDisable(Node[] eventTargetNodes) {
 		DOMEvent ev = StrictWeb.globalEvent;
 
 		Node el = StrictWeb.swTarget;
@@ -254,7 +254,7 @@ public class Ajax {
 		eventTargetNodes[1].removeChild(eventTargetNodes[0]);
 	}
 	
-	void eventTargetEnable(Node[] eventTargetNodes) {
+	public void eventTargetEnable(Node[] eventTargetNodes) {
 		if(null == eventTargetNodes || eventTargetNodes.length!=3) return;
 		
 		eventTargetNodes[1].insertBefore(eventTargetNodes[0], eventTargetNodes[2]);
