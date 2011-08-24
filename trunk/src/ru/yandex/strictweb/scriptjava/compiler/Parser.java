@@ -29,13 +29,13 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.persistence.Transient;
 import javax.tools.Diagnostic;
+import javax.tools.Diagnostic.Kind;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-import javax.tools.Diagnostic.Kind;
 
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTaskImpl;
@@ -1222,7 +1222,9 @@ public class Parser implements CompilerPlugin {
 		}
 		if(null == cl) throw new RuntimeException("Unknown class: " + type + " :: "+n);
 		ParsedField f = cl.fields.get(n);
-		if(null == f) throw new RuntimeException("Unknown field: " + type.getName()+"."+n);
+		if(null == f) {
+			throw new RuntimeException("Unknown field: " + type.getName()+"."+n);
+		}
 		return f.type.implement(cl.parameters, currentType);
 	}
 

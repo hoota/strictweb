@@ -169,6 +169,9 @@ public class AjaxService extends HttpServlet {
     				if(orm != null) orm.commit();
     
     			}catch(Throwable e) {
+    				if(e.getClass().getCanonicalName().equals("org.eclipse.jetty.continuation.ContinuationThrowable")) {
+    					throw e;
+    				}
     				e.printStackTrace();
     				if(null!=orm) orm.rollback();
     				result.setError(e);
@@ -181,6 +184,9 @@ public class AjaxService extends HttpServlet {
 			    response.getWriter().print(resultStr);
 			}
 		}catch(Throwable e) {
+			if(e.getClass().getCanonicalName().equals("org.eclipse.jetty.continuation.ContinuationThrowable")) {
+				throw (Error)e;
+			}
 			e.printStackTrace();
 			if(null!=orm) orm.rollback();
 			

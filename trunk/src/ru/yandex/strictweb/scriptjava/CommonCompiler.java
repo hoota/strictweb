@@ -105,7 +105,8 @@ public class CommonCompiler {
 	}
 	
 	@Arguments(description = "ignores all calls to the specified class)")
-	public final void setIgnoredClass(String clazzName) {
+	public final CommonCompiler setIgnoredClass(String clazzName) {
 		this.ignoredClasses.add(clazzName);
+		return this;
 	}
 }
