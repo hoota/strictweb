@@ -70,8 +70,15 @@ public class StrictWeb {
 	}
 	
     @MayBeExcluded
-	@NativeCode("{return str.replace(/&/g, '&amp;').replace(/</g, '&lt;')" +
-		".replace(/>/g, '&gt;').replace(/\"/g, '&quot;');}")
+	@NativeCode("{return str" +
+	    ".replace(%toHTML%_ampRE, '&amp;')" +
+	    ".replace(%toHTML%_ltRE, '&lt;')" +
+		".replace(%toHTML%_gtRE, '&gt;')" +
+		".replace(%toHTML%_quotRE, '&quot;');};" +
+		"var %toHTML%_ampRE=/&/g;"+
+		"var %toHTML%_ltRE=/</g;" +
+		"var %toHTML%_gtRE=/>/g;" +
+		"var %toHTML%_quotRE=/\\\"/g;")
 	public static String toHTML(String str) {
 		return null;
 	}

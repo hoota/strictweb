@@ -156,7 +156,7 @@ public class Ajax {
 
 		Log.info(url + " :: " + postXml);
         
-		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		setRequestHeaders(request);
 		request.send(postXml);
 		
 		if(async) return null;
@@ -173,6 +173,10 @@ public class Ajax {
             );
         }
         return res.data;
+	}
+
+	public void setRequestHeaders(XMLHttpRequest request) {
+		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	}
 
 	private AjaxRequestResult[] parseRequestResult(XMLHttpRequest request, String url, List<AjaxRequest> requests) {
