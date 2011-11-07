@@ -7,13 +7,6 @@ public class JsonParanoidPresentation extends JsonPresentation {
 	static Pattern dblQuotePattern = Pattern.compile("\"");
 	static final char[] hex = new char[] {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 	
-	public JsonParanoidPresentation() {
-    }
-    
-    public JsonParanoidPresentation(Appendable writer) {
-        buf = writer;
-    }
-	
 	public static Appendable staticSafe(Appendable buf, String s) throws IOException {
 	    int length = s.length();
         for(int i=0; i<length;i++) {
@@ -26,11 +19,11 @@ public class JsonParanoidPresentation extends JsonPresentation {
 	
 	@Override
 	public Appendable safe(String s) throws IOException {
-	    return staticSafe(buf.append('"'), s).append('"');
+	    return staticSafe(out.append('"'), s).append('"');
 	}
 
     @Override
 	public Appendable safeKey(String key) throws IOException {
-	    return staticSafe(buf.append('"'), key).append("\":");
+	    return staticSafe(out.append('"'), key).append("\":");
 	}	
 }

@@ -3,8 +3,8 @@ package ru.yandex.strictweb.example.sampleajax;
 import java.util.Date;
 import java.util.Map;
 
+import ru.yandex.strictweb.scriptjava.base.CommonDelegate;
 import ru.yandex.strictweb.scriptjava.base.CommonElements;
-import ru.yandex.strictweb.scriptjava.base.DOMEventCallback;
 import ru.yandex.strictweb.scriptjava.base.InputValidator;
 import ru.yandex.strictweb.scriptjava.base.Node;
 import ru.yandex.strictweb.scriptjava.base.NodeBuilder;
@@ -59,8 +59,8 @@ public class SampleUiForm extends CommonElements {
             }))
         ;
         
-        form.add($BTN("Save", new DOMEventCallback() {
-            public boolean delegate(Node n) {
+        form.add($BTN("Save", new CommonDelegate<Boolean, NodeBuilder>() {
+            public Boolean delegate(NodeBuilder n) {
                 if(!new ValidatorHelperBase().validate(form)) return false;
                 window.alert(helper.saveObject((SomeModel)(Object)form.node));
                 return false;
@@ -80,8 +80,8 @@ public class SampleUiForm extends CommonElements {
     }
 
     private NodeBuilder drawServerTimeButton() {
-        return $BTN("Show server time&date", new DOMEventCallback() {
-            public boolean delegate(Node n) {
+        return $BTN("Show server time&date", new CommonDelegate<Boolean, NodeBuilder>() {
+            public Boolean delegate(NodeBuilder n) {
                 ajaxAsyncCall(helper.getServerDate(), new VoidDelegate<Date>() {
                     public void voidDelegate(Date date) {
                         window.alert(dateToStringSmart(date));
@@ -93,12 +93,15 @@ public class SampleUiForm extends CommonElements {
     }
 
     private static void initAjax() {
-        Ajax.DEFAULT_LOADING_IMG = "http://mbo.market.yandex.ru/js/yui/assets/skins/sam/wait.gif";
-        Ajax.defaultErrorHandler = new VoidDelegate<Throwable>() {
-            public void voidDelegate(Throwable exc) {
-                if(exc == null) return;
-                window.alert("Error: " + exc.getMessage());
-            }
-        };
+    	Ajax.helper = new Ajax() {
+    		public String getLoadingImageUrl() {
+    			return "http://mbo.market.yandex.ru/js/yui/assets/skins/sam/wait.gif";
+    		}
+    		
+    		public void onError(Throwable exc) {
+    			if(exc == null) return;
+    			window.alert("Error: " + exc.getMessage());
+    		}
+    	};
     }
 }

@@ -30,27 +30,36 @@ public class JsonRefPresentation implements Presentation {
 	NumberFormat numberFormat;
 	
 	private int currentIndex;
-	private StringBuilder buf;
+	private Appendable out;
 	private StringBuilder assign;
 	
 	public String toString(Object o) throws Exception {
         return toString(null, o);
     }
-    
-    @Override
-    public String toString(String rootKey, Object o) throws Exception {
-        boolean returnStr = buf == null;
-        if(buf == null) buf = new StringBuilder();
-        
-        buf.append("var o={};\n");
+	
+	@Override
+	public void present(Appendable out, Object o) throws Exception {
+		present(out, null, o);
+	}
+	
+	@Override
+	public void present(Appendable out, String rootKey, Object o) throws Exception {
+	    this.out = out;
+	    
+        out.append("var o={};\n");
         
         assign = new StringBuilder();
         
         presentOne(rootKey, o, -1);
         
-        buf.append(";\n").append(assign);
-        
-        return returnStr ? buf.toString() : null;
+        out.append(";\n").append(assign);
+	}
+    
+    @Override
+    public String toString(String rootKey, Object o) throws Exception {
+    	StringBuilder buf = new StringBuilder();
+    	present(buf, rootKey, o);
+    	return buf.toString();
     }
 	
 	void objectBegin(String key, Object x, char bracket) throws IOException {
@@ -60,19 +69,19 @@ public class JsonRefPresentation implements Presentation {
 		references.put(x, currentIndex);
 		
 		if(key == null) {
-			objectName(buf, currentIndex);
+			objectName(out, currentIndex);
 		} else {
-			JsonPresentation.staticSafeKey(buf, key);
-			objectName(buf, currentIndex);
+			JsonPresentation.staticSafeKey(out, key);
+			objectName(out, currentIndex);
 		}
 
 		stack.addLast(ci);
 
-		buf.append('=').append(bracket);
+		out.append('=').append(bracket);
 	}
 	
-	void objectEnd(String key, char bracket) {
-		buf.append(bracket);
+	void objectEnd(String key, char bracket) throws IOException {
+		out.append(bracket);
 		currentIndex = stack.pollLast();
 	}
 	
@@ -210,8 +219,8 @@ public class JsonRefPresentation implements Presentation {
 		if(n!=null) {
 			if(key != null) {
 				if(currentIndex < n) {
-					JsonPresentation.staticSafeKey(buf, key);
-					objectName(buf, n);
+					JsonPresentation.staticSafeKey(out, key);
+					objectName(out, n);
 					return true;
 				}
 				
@@ -223,11 +232,11 @@ public class JsonRefPresentation implements Presentation {
 				}
 			} else {
 				if(currentIndex < n) {
-					objectName(buf, n);
+					objectName(out, n);
 					return true;
 				}
 
-				buf.append("null");
+				out.append("null");
 				objectName(assign, currentIndex);
 				assign.append("[").append(arrayIndex).append("]");
 			}
@@ -236,7 +245,7 @@ public class JsonRefPresentation implements Presentation {
 			objectName(assign, n);
 			assign.append(";");
 
-			if(buf.length() > 0 && buf.charAt(buf.length()-1)==',') buf.setLength(buf.length() - 1);
+//			if(out.length() > 0 && out.charAt(out.length()-1)==',') out.setLength(out.length() - 1);
 			return true;
 		}
 
@@ -245,26 +254,26 @@ public class JsonRefPresentation implements Presentation {
 	}
 
 	void presentString(String key, String val) throws IOException {
-		if(key == null) JsonPresentation.staticSafe(buf, val);
-		else JsonPresentation.staticSafe(JsonPresentation.staticSafeKey(buf, key), val);
+		if(key == null) JsonPresentation.staticSafe(out, val);
+		else JsonPresentation.staticSafe(JsonPresentation.staticSafeKey(out, key), val);
 	}
 	
 	void presentNull(String key) throws IOException {
-		if(key == null) buf.append("null");
-		else JsonPresentation.staticSafeKey(buf, key).append("null");		
+		if(key == null) out.append("null");
+		else JsonPresentation.staticSafeKey(out, key).append("null");		
 	}
 
 	void presentNumber(String key, String val) throws IOException {
-		if(key == null) buf.append(val);
-		else JsonPresentation.staticSafeKey(buf, key).append(val);
+		if(key == null) out.append(val);
+		else JsonPresentation.staticSafeKey(out, key).append(val);
 	}
 	
-	void addSeparator() {
-		if(buf.length() > 0) {
-			char c = buf.charAt(buf.length() - 1);
-			if(c==',' || c=='[' || c=='{') return;
-		}
-		buf.append(',');
+	void addSeparator() throws IOException {
+//		if(out.length() > 0) {
+//			char c = out.charAt(out.length() - 1);
+//			if(c==',' || c=='[' || c=='{') return;
+//		}
+		out.append(',');
 	}
 	
 	public boolean isEnumsAsClasses() {
@@ -298,7 +307,7 @@ public class JsonRefPresentation implements Presentation {
 		'U' , 'V' , 'W' , 'X' , 'Y' , 'Z' ,
 	};
 	
-	void objectName(StringBuilder b, int index) {
+	void objectName(Appendable b, int index) throws IOException {
 		b.append("o._");
 		do {
 			b.append(digits[index%digits.length]);

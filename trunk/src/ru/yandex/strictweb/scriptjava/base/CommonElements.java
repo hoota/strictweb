@@ -45,11 +45,11 @@ public class CommonElements extends StrictWeb {
 	}
 	
     @MayBeExcluded
-	public static final DOMBuilder[] $LABEL(Object title, DOMBuilder nb) {
+	public static final NodeBuilder $LABEL(Object title, Node node) {
 		NodeBuilder l = new NodeBuilder("label").append((Node)title);
-		l.node.htmlFor = nb.node.id;
-		if(null==nb.node.id) nb.node.id = nb.node.name;
-		return new DOMBuilder[] {l, nb};
+		if(!(Boolean)(Object)node.id) node.id = node.name + Math.random();
+		l.node.htmlFor = node.id;
+		return l;
 	}
 
     @MayBeExcluded

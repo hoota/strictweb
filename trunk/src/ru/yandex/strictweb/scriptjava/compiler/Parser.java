@@ -594,20 +594,26 @@ public class Parser implements CompilerPlugin {
 	public String getAnnotationValue(String an, JCModifiers modifiers) {
 		for(JCAnnotation a : modifiers.getAnnotations()) {
 			if(a.annotationType.toString().equals(an)) {
-				String val = a.toString();
+				if(a.args.size() != 1) throw new RuntimeException("Annotation value args!=1");
+				JCExpression value = a.args.get(0);
+				String val = "";
+				try {
+				    val = value.getClass().getField("value").get(value).toString();
+				}catch(Throwable e) {new RuntimeException(e);}
 				
-				
-				if(val.indexOf("(") <0) return "";
-				val = val.replaceFirst("^[^\\(]+\\(", ""); // убираем то, что до скобочки
-				val = val.replaceFirst("\\)$", ""); //убираем последную скобочку
-				val = val.replaceAll("\"\\s*\\+\\s*\"", ""); // убираем " + "
-				val = val.replaceAll("\\\\\"", "\""); 
-				val = val.replaceAll("\\\\'", "'");
-				val = val.replaceAll("([^\\\\])\\\\\\\\", "$1\\\\");
 //				System.out.println("getAnnotationValue: " + val);
-				//throw new RuntimeException(val);
-				if(val.startsWith("\"") && val.endsWith("\""))
-					return val.substring(1, val.length()-1);
+				
+//				if(val.indexOf("(") <0) return "";
+//				val = val.replaceFirst("^[^\\(]+\\(", ""); // убираем то, что до скобочки
+//				val = val.replaceFirst("\\)$", ""); //убираем последную скобочку
+//				val = val.replaceAll("\"\\s*\\+\\s*\"", ""); // убираем " + "
+//				val = val.replaceAll("\\\\\"", "\""); 
+//				val = val.replaceAll("\\\\'", "'");
+//				val = val.replaceAll("([^\\\\])\\\\\\\\", "$1\\\\");
+////				System.out.println("getAnnotationValue: " + val);
+//				//throw new RuntimeException(val);
+//				if(val.startsWith("\"") && val.endsWith("\""))
+//					return val.substring(1, val.length()-1);
 				return val;
 			}
 		}
@@ -1859,6 +1865,15 @@ public class Parser implements CompilerPlugin {
 	
 	public void parseJCTree_JCTypeCast(com.sun.tools.javac.tree.JCTree.JCTypeCast node) {
 		parse(node.getExpression());
+	}
+	
+	public void parseJCTree_JCDoWhileLoop(com.sun.tools.javac.tree.JCTree.JCDoWhileLoop node) {
+		addLabelIfNeeded();
+		code.append("do");
+		parse(node.getStatement());
+		code.append("while");
+		parse(node.getCondition());
+		code.append(";");
 	}
 	
 	public void parseJCTree_JCWhileLoop(com.sun.tools.javac.tree.JCTree.JCWhileLoop node) {

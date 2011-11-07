@@ -5,13 +5,6 @@ import java.util.regex.Pattern;
 
 public class XmlPresentation extends AbstractPresentation {	
 	
-    public XmlPresentation() {
-    }
-    
-    public XmlPresentation(Appendable writer) {
-        buf = writer;
-    }
-    
 	public static String present(Object o) throws Exception {
 		XmlPresentation xml = new XmlPresentation();
 		return xml.toString(o);
@@ -19,30 +12,30 @@ public class XmlPresentation extends AbstractPresentation {
 	
 	@Override
     boolean hashBegin(String key, Object x) throws IOException {
-        if(key == null) buf.append("<").append(x.getClass().getSimpleName()).append(">");
-        else if(isXmlName(key)) buf.append("<").append(key).append(">");
-        else buf.append("<object name=\"").append(safe(key)).append("\">");
+        if(key == null) out.append("<").append(x.getClass().getSimpleName()).append(">");
+        else if(isXmlName(key)) out.append("<").append(key).append(">");
+        else out.append("<object name=\"").append(safe(key)).append("\">");
         return true;
     }
 
 	@Override
     void hashEnd(String key, Object x) throws IOException {
-        if(isXmlName(key)) buf.append("</").append(key).append(">");
-        else buf.append("</").append(x.getClass().getSimpleName()).append(">");
+        if(isXmlName(key)) out.append("</").append(key).append(">");
+        else out.append("</").append(x.getClass().getSimpleName()).append(">");
     }
 
 	@Override
     boolean listBegin(String key, Object x) throws IOException {
-        if(key == null) buf.append("<list>");
-        else if(isXmlName(key)) buf.append("<").append(key).append(">");
-        else buf.append("<list name=\"").append(safe(key)).append("\">");
+        if(key == null) out.append("<list>");
+        else if(isXmlName(key)) out.append("<").append(key).append(">");
+        else out.append("<list name=\"").append(safe(key)).append("\">");
         return true;
     }
 
 	@Override
     void listEnd(String key) throws IOException {
-        if(isXmlName(key)) buf.append("</").append(key).append(">");
-        else buf.append("</list>");
+        if(isXmlName(key)) out.append("</").append(key).append(">");
+        else out.append("</list>");
     }
 
 	@Override
@@ -51,25 +44,25 @@ public class XmlPresentation extends AbstractPresentation {
 
 	@Override
     void presentString(String key, String val, boolean forceItem) throws IOException {
-        if(key == null) buf.append("<str>").append(safe(val)).append("</str>");
-        else if(isXmlName(key) && !forceItem) buf.append("<").append(key).append(">").append(safe(val)).append("</").append(key).append(">");
-        else buf.append("<str name=\"").append(safe(key)).append("\">").append(safe(val)).append("</str>");
+        if(key == null) out.append("<str>").append(safe(val)).append("</str>");
+        else if(isXmlName(key) && !forceItem) out.append("<").append(key).append(">").append(safe(val)).append("</").append(key).append(">");
+        else out.append("<str name=\"").append(safe(key)).append("\">").append(safe(val)).append("</str>");
     }
     
     @Override
     void presentNull(String key, boolean forceItem) throws IOException {
-        if(key == null) buf.append("<null/>");
+        if(key == null) out.append("<null/>");
         else if(forceItem) {
-            if(isXmlName(key)) buf.append("<null name=\"").append(safe(key)).append("\"/>");
-            else buf.append("<null name=\"").append(safe(key)).append("\"/>");
+            if(isXmlName(key)) out.append("<null name=\"").append(safe(key)).append("\"/>");
+            else out.append("<null name=\"").append(safe(key)).append("\"/>");
         }
     }
 
 	@Override
     void presentNumber(String key, String val, boolean forceItem) throws IOException {
-        if(key == null) buf.append("<num>").append(safe(val)).append("</num>");
-        else if(isXmlName(key) && !forceItem) buf.append("<").append(key).append(">").append(safe(val)).append("</").append(key).append(">");
-        else buf.append("<num name=\"").append(safe(key)).append("\">").append(safe(val)).append("</num>");
+        if(key == null) out.append("<num>").append(safe(val)).append("</num>");
+        else if(isXmlName(key) && !forceItem) out.append("<").append(key).append(">").append(safe(val)).append("</").append(key).append(">");
+        else out.append("<num name=\"").append(safe(key)).append("\">").append(safe(val)).append("</num>");
     }
 	
 	static final Pattern xmlNamePattern = Pattern.compile("[a-z0-9][a-z0-9_]*", Pattern.CASE_INSENSITIVE);

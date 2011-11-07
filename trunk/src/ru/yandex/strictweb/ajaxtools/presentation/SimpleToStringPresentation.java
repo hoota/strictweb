@@ -1,41 +1,44 @@
 package ru.yandex.strictweb.ajaxtools.presentation;
 
-public class SimpleToStringPresentation implements Presentation {
+import java.io.IOException;
 
-    Appendable buf;
-    
-    public SimpleToStringPresentation(Appendable buf) {
-        this.buf = buf == null ? new StringBuilder() : buf;
-    }
-    
-    @Override
-    public Presentation forceEnumsAsClasses(boolean forceEnumsAsClasses) {
-    	return this;
-    }
+public class SimpleToStringPresentation extends AbstractPresentation {
+	@Override
+	public void present(Appendable out, String rootKey, Object o) throws Exception {
+		if(o!=null) out.append(o.toString());
+	}
 
-    @Override
-    public DateTimeFormat getDateFormat() {
-        return null;
-    }
+	@Override
+	boolean hashBegin(String key, Object x) throws IOException {
+		return false;
+	}
 
-    @Override
-    public boolean isEnumsAsClasses() {
-        return false;
-    }
+	@Override
+	void hashEnd(String key, Object x) throws IOException {
+	}
 
-    @Override
-    public Presentation setDateFormat(DateTimeFormat dateFormat) {
-    	return this;
-    }
+	@Override
+	boolean listBegin(String key, Object x) throws IOException {
+		return false;
+	}
 
-    @Override
-    public String toString(String rootKey, Object o) throws Exception {
-       buf.append(o.toString());
-       return buf instanceof StringBuilder ? buf.toString() : null;
-    }
+	@Override
+	void listEnd(String key) throws IOException {
+	}
 
-    @Override
-    public String toString(Object o) throws Exception {
-        return toString(null, o);
-    }    
+	@Override
+	void addSeparator() throws IOException {
+	}
+
+	@Override
+	void presentString(String key, String val, boolean forceItem) throws IOException {
+	}
+
+	@Override
+	void presentNull(String key, boolean forceItem) throws IOException {
+	}
+
+	@Override
+	void presentNumber(String key, String val, boolean forceItem) throws IOException {
+	}
 }
