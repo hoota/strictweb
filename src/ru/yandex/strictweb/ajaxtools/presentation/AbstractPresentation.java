@@ -24,7 +24,7 @@ public abstract class AbstractPresentation implements Presentation {
 	NumberFormat numberFormat = numberFormats[6];
 	boolean forceEnumsAsClasses = false;
 	DateTimeFormat dateFormat = DateTimeFormat.DATE;
-	Appendable buf;
+	Appendable out;
 
 	boolean presentEntity(Object o, boolean first) throws Exception {
 
@@ -49,17 +49,25 @@ public abstract class AbstractPresentation implements Presentation {
 		return first;
 	}
 	
+	@Override
+	public void present(Appendable out, Object o) throws Exception {
+		present(out, null, o);
+	}
+	
+	@Override
+	public void present(Appendable out, String rootKey, Object o) throws Exception {
+		this.out = out;
+        presentOne(rootKey, o, false);		
+	}
+	
     public String toString(Object o) throws Exception {
         return toString(null, o);
     }
     
     public String toString(String rootKey, Object o) throws Exception {
-        boolean returnStr = buf == null;
-        if(buf == null) buf = new StringBuilder();
-        
-        presentOne(rootKey, o, false);
-        
-        return returnStr ? buf.toString() : null;
+    	StringBuilder buf = new StringBuilder();
+    	present(buf, rootKey, o);
+    	return buf.toString();
     }   
 	
 	void presentOne(String key, Object o, boolean forceItem) throws Exception {

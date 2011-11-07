@@ -10,6 +10,7 @@ import ru.yandex.strictweb.scriptjava.base.CommonDelegate;
 import ru.yandex.strictweb.scriptjava.base.DOMBuilder;
 import ru.yandex.strictweb.scriptjava.base.DOMEvent;
 import ru.yandex.strictweb.scriptjava.base.JsException;
+import ru.yandex.strictweb.scriptjava.base.MayBeExcluded;
 import ru.yandex.strictweb.scriptjava.base.Native;
 import ru.yandex.strictweb.scriptjava.base.NativeCode;
 import ru.yandex.strictweb.scriptjava.base.Node;
@@ -25,9 +26,6 @@ public class Ajax {
     public static final String FIELD_MULTISELECT = "field.multiselect";
     private static final String MICROSOFT_XMLHTTP = "Microsoft.XMLHTTP";
 	private static final String EV_ONREADYSTATECHANGE = "onreadystatechange";
-	public static String XML_DATA_PARAM = "xml-data";
-	public static String BEAN_NAME_PARAM = "bean";
-	public static String METHOD_NAME_PARAM = "action";
 	public static Ajax helper;
 	
 	boolean autoRequest = true;
@@ -37,16 +35,16 @@ public class Ajax {
         return "/ajax";
     }
 	
-    public String getQueryString(List<AjaxRequest> requests) {
-        String query = "_rnd="+Math.random();
-        
-        for(int i=0; i<requests.size(); i++) {
-            AjaxRequest r = requests.get(i);
-            query += "&" + BEAN_NAME_PARAM+i+"="+r.clazz + "&"+METHOD_NAME_PARAM+i+"="+r.method;
-        }
-        
-        return query;
-    }
+//    public String getQueryString(List<AjaxRequest> requests) {
+//        String query = "_rnd="+Math.random();
+//        
+//        for(int i=0; i<requests.size(); i++) {
+//            AjaxRequest r = requests.get(i);
+//            query += "&" + BEAN_NAME_PARAM+i+"="+r.clazz + "&"+METHOD_NAME_PARAM+i+"="+r.method;
+//        }
+//        
+//        return query;
+//    }
     
     public String getLoadingImageUrl() {
         return null;
@@ -86,7 +84,7 @@ public class Ajax {
 	    autoRequest = true;
 	}
     
-	public Object call(String clazz, final String method, Object args, final VoidDelegate<Object> callBack, final VoidDelegate<Throwable> errorHandler) throws Throwable {
+	public Object call(String clazz, final String method, Object[] args, final VoidDelegate<Object> callBack, final VoidDelegate<Throwable> errorHandler) throws Throwable {
         if(errorHandler != null) errorHandler.voidDelegate(null); else onError(null);
         
         boolean async = callBack != null;
@@ -104,15 +102,22 @@ public class Ajax {
 	    onError(null);
 	    
         XMLHttpRequest request = getHttpRequest();
-        String postXml = "";
-        
+//        String postXml = "";
+//        
+//        for(int i=0; i<requests.size(); i++) {
+//            AjaxRequest r = requests.get(i);
+//	        if(r.errorHandler != null) r.errorHandler.voidDelegate(null);
+//	        postXml += "&"+XML_DATA_PARAM+i+"="
+//	            + objectToXml(r.args, null).replaceAll("%", "%25").replaceAll("&", "%26").replaceAll(";", "%3B").replaceAll("\\+", "%2B");
+//	    }
+
+        String postJson = "[";
         for(int i=0; i<requests.size(); i++) {
             AjaxRequest r = requests.get(i);
-	        if(r.errorHandler != null) r.errorHandler.voidDelegate(null);
-	        postXml += "&"+XML_DATA_PARAM+i+"="
-	            + objectToXml(r.args, null).replaceAll("%", "%25").replaceAll("&", "%26").replaceAll(";", "%3B").replaceAll("\\+", "%2B");
-	    }
-        
+            postJson += objectToJson(r.clazz) + "," + objectToJson(r.method) + "," + arrayToJson(r.args); 
+            if(i != requests.size()-1) postJson += ",";
+        }
+        postJson += "]";
 	   
 		final String url = getRequestUrl(requests);
 		
@@ -124,8 +129,9 @@ public class Ajax {
 			StrictWeb.setVoidEventCallback(request, EV_ONREADYSTATECHANGE, new VoidDelegate<XMLHttpRequest>() {
 				public void voidDelegate(XMLHttpRequest request) {
 					if(request.readyState == 4) {
-					    
-					    StrictWeb.setVoidEventCallback(request, EV_ONREADYSTATECHANGE, null);
+					    try {
+					    	StrictWeb.setVoidEventCallback(request, EV_ONREADYSTATECHANGE, null);
+					    }catch(Exception e){/*StrictWeb.window.alert(e);*/}
 				        eventTargetEnable(eventTargetNodes);
 				        
 				        if(request.status == 200) {
@@ -151,13 +157,16 @@ public class Ajax {
 			});
 		}
 		
-		postXml = getQueryString(requests) + postXml;
+//		postXml = getQueryString(requests) + postXml;
 		request.open("POST", url, async, null, null);
 
-		Log.info(url + " :: " + postXml);
+		Log.info("POST URL : " + url);
+		Log.info("POST JSON: " + postJson);
+        Log.info("POST args:");
+        Log.info(requests);
         
 		setRequestHeaders(request);
-		request.send(postXml);
+		request.send(postJson);
 		
 		if(async) return null;
 				
@@ -176,7 +185,8 @@ public class Ajax {
 	}
 
 	public void setRequestHeaders(XMLHttpRequest request) {
-		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+//		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        request.setRequestHeader("Content-type", "application/json");
 	}
 
 	private AjaxRequestResult[] parseRequestResult(XMLHttpRequest request, String url, List<AjaxRequest> requests) {
@@ -194,7 +204,7 @@ public class Ajax {
 				} else {
 				    evalResult = StrictWeb.evalFunction("return " + responseText);
 				}
-				result = requests.size()==1 ? new AjaxRequestResult[] {(AjaxRequestResult)evalResult}: (AjaxRequestResult[])evalResult;
+				result = (AjaxRequestResult[])evalResult;
 				Log.debug("Ajax result:");
 				Log.debug(result);
 			}catch(Throwable e) {
@@ -234,8 +244,10 @@ public class Ajax {
 		    if(null==ev) return;
 		    el = ev.target;
 		}
-		if(el==null) el = ev.srcElement;
-		if(el==null) el = ev.fromElement;
+		try {
+			if(el==null) el = ev.srcElement;
+			if(el==null) el = ev.fromElement;
+		}catch(Exception e) {/* NOP */}
 
 		if(el==null || null==el.tagName || el.parentNode==null) return;
 		
@@ -278,9 +290,116 @@ public class Ajax {
 	}
 
 	@NativeCode("{throw th;}")
-	private static void nativeJsThrow(Object th) {
+	private static <T> T nativeJsThrow(Object th) {
+	    return null;
 	}
 
+    @MayBeExcluded
+    public static String objectToJson(Object obj) {
+        if(StrictWeb.jsTypeOf(obj) == "undefined") return "null";
+        if(StrictWeb.jsTypeOf(obj) == "string") return '"' + StrictWeb.toJSON((String)obj) + '"';
+        if(StrictWeb.jsTypeOf(obj) == "boolean") return ((Boolean)obj) ? "1": "0";
+        if(StrictWeb.jsTypeOf(obj) == "number") return obj.toString();
+        if(StrictWeb.jsTypeOf(obj) == "object") {
+            if(obj == null) return "null";
+            if(StrictWeb.isEnum(obj)) return obj.toString();
+            if(StrictWeb.isInstanceOfDate(obj)) return StrictWeb.dateToStringSmart((Date)obj); 
+            if(StrictWeb.isInstanceOfArray(obj)) return arrayToJson((Object[])obj); 
+            if(StrictWeb.isInstanceOfNode(obj)) {
+                String json = formToJson((Node)obj);
+                if(json!=null&&json.length()>0&&json.charAt(0)=='{') return "["+json+"]";
+                return "{"+json+"}";
+            }
+            Map<String, String> map = (Map<String, String>) obj;
+            String json = "";
+            for(String key : map.keySet()) {
+                String val = map.get(key);
+                if(StrictWeb.jsTypeOf(val) == "function") continue;
+                if(json.length() > 0) json += ",";
+                json += objectToJson(key) + ":" + objectToJson(val);
+            }
+            return "{" + json + "}";            
+        }
+        
+        return nativeJsThrow("Unknown object type: " + StrictWeb.jsTypeOf(obj));
+    }
+
+    @MayBeExcluded
+    public static String arrayToJson(Object[] a) {
+        if(a == null) return "null";
+        String json = "";
+        for(int i=0; i < a.length; i++) {
+            Object val = a[i];
+            if(StrictWeb.jsTypeOf(val) == "function") continue;
+            
+            if(json.length() > 0) json += ",";
+            json += objectToJson(val);
+        }
+        return "[" + json + "]";
+    }
+
+    @MayBeExcluded
+    public static String formToJson(Node start) {
+        if(start.field == DOMBuilder.DISABLED) return "";
+
+        String json = "";
+        boolean asArray = false;
+        
+        for(Node el : start.childNodes) {
+            if(el.field == DOMBuilder.DISABLED) continue;
+            if(((Boolean)(Object)el.id || (Boolean)(Object)el.name) && (el.tagName=="INPUT" || el.tagName=="SELECT" || el.tagName=="TEXTAREA")) {
+                if(el.type == "radio" && !el.checked) continue;
+                if(json.length()>0) json += ",";
+                if(asArray) throw new RuntimeException("Form returned as array, not at map");
+                json += objectToJson((Boolean)(Object)el.id || (Boolean)(Object)el.name) + ":";
+                
+                if(el.type == "checkbox") json += el.checked ? "1" : "0";
+                else json += objectToJson(el.value);
+                
+            } else if(el.className!=null && el.className.indexOf(FIELD_MULTISELECT) >= 0) {
+                final List<Object> val = new ArrayList<Object>();
+                NodeBuilder.wrap(el).forEachSubchild(new CommonDelegate<Boolean, Node>() {
+                    public Boolean delegate(Node n) {
+                        if(n.field == DOMBuilder.DISABLED) return false;
+                        if(n.tagName=="INPUT" || n.tagName=="SELECT") {
+                            if(n.type == "checkbox") {
+                                if(n.checked) val.add((Boolean)(Object)n.id || (Boolean)(Object)n.name);
+                            } else {
+                                val.add((String)n.value);
+                            }
+                        }
+                        return true;
+                    }
+                });
+                
+                if(json.length()>0) json += ",";
+                if(asArray) throw new RuntimeException("Form returned as array, not at map");
+                json += objectToJson(el.field) + ":" + arrayToJson((Object[])(Object)val);
+            } else {
+                String childJson = formToJson(el);
+                if(childJson != null && childJson.length() > 0) {
+                    if(childJson.charAt(0) == '{') asArray = true;
+                    else if(asArray) throw new RuntimeException("Form returned as array, not at map");
+
+                    if(json.length()>0) json += ",";
+                    json += childJson;
+                }
+            }
+        }
+        
+        if(start.field != null) {
+            if(StrictWeb.jsTypeOf(start.field) == "string") {
+                return objectToJson(start.field) + ":{" + json + "}";
+            } else return "{" + json + "}";
+        }
+        
+        if(asArray) return "[" + json + "]";
+        
+        return json;
+    }
+    
+    
+    @MayBeExcluded
 	public static String objectToXml(Object obj, String _id) {
 		String id = (_id!=null?" id=\""+_id+"\"":"");
 		if(StrictWeb.jsTypeOf(obj) == "undefined") return "<null"+id+"/>";
@@ -308,6 +427,7 @@ public class Ajax {
 		return "<"+StrictWeb.jsTypeOf(obj) + "/>";
 	}
 
+    @MayBeExcluded
 	public static String formToXml(Node start) {
 		String xml = "";
 		
@@ -360,6 +480,7 @@ public class Ajax {
 		return xml;
 	}
 
+    @MayBeExcluded
 	public static String arrayToXml(Object[] a, String id) {
 		String xml = "<a"+id+">";
 		for(int i=0; i < a.length; i++) {

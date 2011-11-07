@@ -1,4 +1,4 @@
-package ru.yandex.strictweb.ajaxtools;
+package ru.yandex.strictweb.ajaxtools.representation;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -24,14 +24,14 @@ import ru.yandex.strictweb.ajaxtools.exception.RePresentationException;
 import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo;
 
 
-public class RePresentation {
+public class XmlRePresentation {
 	public static interface EntityFinder {
 		Object find(Class<?> clazz, Object primaryKey);
 	}
 	
 	EntityFinder ef;
 	
-	public RePresentation(EntityFinder ef) {
+	public XmlRePresentation(EntityFinder ef) {
 		this.ef = ef;
 	}
 	
@@ -44,6 +44,10 @@ public class RePresentation {
 	public static long parseDate(String in) {
 		if(in == null || in.isEmpty()) return -1;
 
+		try {
+			return Long.parseLong(in);
+		}catch(NumberFormatException e) {}
+		
 		String dateTime[] = in.replaceAll("\\s+", " ").trim().split(" ");
 		String date[] = dateTime[0].split("[^0-9]");
 		String time[] = dateTime.length > 1 ? dateTime[1].split("[^0-9]") : null;

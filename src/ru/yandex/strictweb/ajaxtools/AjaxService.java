@@ -1,15 +1,15 @@
 package ru.yandex.strictweb.ajaxtools;
 
-import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,12 +19,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 import ru.yandex.strictweb.ajaxtools.annotation.Arguments;
 import ru.yandex.strictweb.ajaxtools.exception.MethodNotArgumentized;
@@ -34,7 +28,10 @@ import ru.yandex.strictweb.ajaxtools.presentation.JsonParanoidPresentation;
 import ru.yandex.strictweb.ajaxtools.presentation.JsonRefPresentation;
 import ru.yandex.strictweb.ajaxtools.presentation.Presentation;
 import ru.yandex.strictweb.ajaxtools.presentation.XmlPresentation;
-import ru.yandex.strictweb.scriptjava.base.ajax.Ajax;
+import ru.yandex.strictweb.ajaxtools.representation.JsonRePresentation;
+import ru.yandex.strictweb.ajaxtools.representation.ParseException;
+import ru.yandex.strictweb.ajaxtools.representation.XmlRePresentation;
+import ru.yandex.strictweb.ajaxtools.representation.Yytoken;
 import ru.yandex.strictweb.scriptjava.base.ajax.AjaxRequestResult;
 
 public class AjaxService extends HttpServlet {
@@ -71,10 +68,10 @@ public class AjaxService extends HttpServlet {
 		if(view != null) {
 			if(view.equals("xml")) {
 				response.setContentType("application/xml");
-				p = new XmlPresentation(response.getWriter());
+				p = new XmlPresentation();
 			}else if(view.equals("jsonparanoid")) {
 //				response.setContentType("text/javascript");
-				p = new JsonParanoidPresentation(response.getWriter());				
+				p = new JsonParanoidPresentation();				
 			}
 		}
 		
@@ -87,31 +84,43 @@ public class AjaxService extends HttpServlet {
 	}
 	
 	
-	Object[] getParams(String paramsData, RePresentation.EntityFinder ef, Method method, HttpServletRequest request) throws Exception {
-		int nParams = method.getParameterTypes().length;
-		if(nParams == 0) return null;
-		
+	Object[] getParams(JsonRePresentation rep, Method method, HttpServletRequest request) throws Exception {
 		Arguments arguments = method.getAnnotation(Arguments.class);
 		if(arguments==null) throw new MethodNotArgumentized(method);
 		
+		Class<?>[] parameterTypes = method.getParameterTypes();
+		
+		int nParams = parameterTypes.length;
+		if(rep.lexer.yylex() != Yytoken.TYPE_LEFT_SQUARE) throw new ParseException("Method "+method.getName()+" args["+nParams+"] expected");
+		
+		if(nParams == 0) {
+	        if(rep.lexer.yylex() != Yytoken.TYPE_RIGHT_SQUARE) throw new ParseException("Method "+method.getName()+" empty args[] expected");
+		    return null;
+		}
+		
+		Type[] genericParameterTypes = method.getGenericParameterTypes();
+		
 		Object[] params = new Object[nParams];
-		Document doc = null;
-		
-		doc = newDocument(paramsData);
-		
-		RePresentation rep = new RePresentation(ef);			
-
-		NodeList properties = doc.getFirstChild().getChildNodes();
-		
-		for(int i = 0; i < properties.getLength() && i<params.length; i++) {
-		    Class<?> parameterType = method.getParameterTypes()[i];
-		    if(parameterType.isAssignableFrom(HttpServletRequest.class)) {
+        
+		for(int i = 0; i < nParams; i++) {
+		    
+			Class<?> clazz = parameterTypes[i];
+			Type type = genericParameterTypes[i];
+	        
+		    if(clazz.isAssignableFrom(HttpServletRequest.class)) {
+		    	if(rep.lexer.yylex() != Yytoken.TYPE_VALUE || rep.lexer.value != null) throw new ParseException("HttpServlet should be null");
 		        params[i] =  request;
 		    } else {
-    			Node node = properties.item(i);
-                params[i] = rep.getObject(node, parameterType, method.getGenericParameterTypes()[i]);
+		    	params[i] = rep.getObject(clazz, type);
 		    }
+		    
+		    rep.lexer.yylex();
+		    
+            if(i == nParams-1 && rep.lexer.type == Yytoken.TYPE_RIGHT_SQUARE) break;
+			if(rep.lexer.type != Yytoken.TYPE_COMMA) throw new ParseException("no , or ] in method params");					
 		}
+		
+        if(rep.lexer.type != Yytoken.TYPE_RIGHT_SQUARE) throw new ParseException("Method "+method.getName()+": bad args");
 
 		return params;
 	}
@@ -129,42 +138,57 @@ public class AjaxService extends HttpServlet {
     @Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 	throws ServletException, IOException {
+    	doRequests(request, response, new StringReader(request.getParameter("a")));
+    }
+    
+    void doRequests(HttpServletRequest request, HttpServletResponse response, Reader input) throws ServletException, IOException {
     	preventCaching(response);
     	
 		ORMManager orm = ormManagerProvider != null ? ormManagerProvider.getORMManager() : null;
 		
+        Presentation present = getPresentation(request, response);
+        
 		try {
 			if(null!=orm) orm.begin();
 
 			response.setCharacterEncoding("utf-8");
 			
-			Presentation present = getPresentation(request, response);
+            if(authorityProvider != null) {
+                authorityProvider.checkRequest(request);
+            }
+						
 			List<AjaxRequestResult> results = new ArrayList<AjaxRequestResult>();
 						
+			final EntityManager em = orm == null ? null : orm.get();
+			
+			
+			XmlRePresentation.EntityFinder ef = new XmlRePresentation.EntityFinder() {
+				public Object find(Class clazz, Object primaryKey) {
+				    if(em == null) return createFakeEntity(clazz, primaryKey);
+					return em.find(clazz, primaryKey);
+				}
+			};
+			
+			JsonRePresentation rep = new JsonRePresentation(ef).reset(input);
+			
+			if(rep.lexer.yylex() != Yytoken.TYPE_LEFT_SQUARE) throw new ParseException("request args should be passed as array");
+			
 			for(int i=0;;i++) {
 			    AjaxRequestResult result = new AjaxRequestResult();
 			    			    
     			try {				
-    		        String beanName = request.getParameter(Ajax.BEAN_NAME_PARAM + i);
-    		        String methodName = request.getParameter(Ajax.METHOD_NAME_PARAM + i);
-                    String paramsData = request.getParameter(Ajax.XML_DATA_PARAM + i);
-    		        if(beanName==null || methodName==null) break;
+    		        String beanName = getStringFromJsonArray("Bean name expected", rep);
+    		        if(beanName==null) break;
     		        
-    			    if(authorityProvider != null) {
-    			        authorityProvider.checkRequest(request);
-    			    }
-    			    
-    				final EntityManager em = orm == null ? null : orm.get();
-    				
-    				
-    				RePresentation.EntityFinder ef = new RePresentation.EntityFinder() {
-    					public Object find(Class clazz, Object primaryKey) {
-    					    if(em == null) return createFakeEntity(clazz, primaryKey);
-    						return em.find(clazz, primaryKey);
-    					}
-    				};
-    				
-                    if(!doAction(beanName, methodName, paramsData, ef, request, result)) break;
+    		        String methodName = getStringFromJsonArray("Method name expected", rep);
+    		        if(methodName==null) break;
+    		        
+    		        rep.lexer.yylex();
+    	            if(rep.lexer.type != Yytoken.TYPE_COMMA) {
+    	                throw new ParseException("Method " + methodName + " args expected as array");
+    	            }
+    		            			    
+                    if(!doAction(beanName, methodName, rep, request, result)) break;
     				
     				if(orm != null) orm.commit();
     
@@ -175,32 +199,44 @@ public class AjaxService extends HttpServlet {
     				e.printStackTrace();
     				if(null!=orm) orm.rollback();
     				result.setError(e);
+    				if(e instanceof ParseException) {
+    				    results.add(result);
+    				    break;
+    				}
     			}
     			
     			results.add(result);
 			}
-			String resultStr = present.toString(results.size() == 1 ? results.get(0) : results);
-			if(null != resultStr) {
-			    response.getWriter().print(resultStr);
-			}
+			present.present(response.getWriter(), results);
 		}catch(Throwable e) {
 			if(e.getClass().getCanonicalName().equals("org.eclipse.jetty.continuation.ContinuationThrowable")) {
 				throw (Error)e;
 			}
 			e.printStackTrace();
 			if(null!=orm) orm.rollback();
-			
-			CharArrayWriter charOut = new CharArrayWriter();
-			
-			e.printStackTrace(new PrintWriter(charOut));
-			
-			response.sendError(500, charOut.toString());
+
+			try {
+                present.present(response.getWriter(), e);
+            } catch (Throwable e1) {
+                response.sendError(500, e.getMessage());
+            }
 		} finally {
 			if(null!=orm) orm.close();
 		}
 	}
 
-    /** Creates a fake entity */
+    private String getStringFromJsonArray(String errMessage, JsonRePresentation rep) throws IOException, ParseException {
+    	for(;;) {
+    		int type = rep.lexer.yylex();
+    		if(type == Yytoken.TYPE_COMMA) continue;
+    		if(type == Yytoken.TYPE_RIGHT_SQUARE) return null;
+            if(type == Yytoken.TYPE_EOF) return null;
+    		if(type == Yytoken.TYPE_VALUE) return rep.lexer.value;
+    		throw new ParseException(errMessage);
+    	}
+	}
+
+	/** Creates a fake entity */
 	protected Object createFakeEntity(Class<?> clazz, Object primaryKey) {
 	    try {
 	        Object ins = clazz.newInstance();
@@ -216,7 +252,7 @@ public class AjaxService extends HttpServlet {
 	    }
     }
 
-    protected boolean doAction(String beanName, String methodName, String paramsData, RePresentation.EntityFinder ef, HttpServletRequest request, AjaxRequestResult result) throws Throwable {		
+    protected boolean doAction(String beanName, String methodName, JsonRePresentation rep, HttpServletRequest request, AjaxRequestResult result) throws Throwable {		
 		Object bean = beanProvider == null ? Class.forName(beanName).newInstance() : beanProvider.getBeanInstance(beanName);
 		
         Method method = null;
@@ -232,7 +268,7 @@ public class AjaxService extends HttpServlet {
         
         if(null == arguments) throw new RuntimeException("Method is not visible for ajax call");
         
-        if(arguments.checkReferer()) {
+        if(false && arguments.checkReferer()) {
             String ref = request.getHeader("Referer");
             if(ref == null) throw new RuntimeException("Invalid referer");
             
@@ -245,11 +281,13 @@ public class AjaxService extends HttpServlet {
             }
         }
 
-        if(arguments.roles().length > 0) {
-        	authorityProvider.checkRequest(request, arguments.roles());
-        }
 		
-		Object[] params = getParams(paramsData, ef, method, request);
+		Object[] params = getParams(rep, method, request);
+		
+		if(authorityProvider != null) {
+		    authorityProvider.checkMethodRequest(request, method, params);
+		}
+		
 //		System.out.println(Arrays.toString(params));
 		try {
 			result.setData(method.invoke(bean, params));
@@ -264,26 +302,28 @@ public class AjaxService extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 	throws ServletException, IOException {
-		doGet(request, response);
+		String a = request.getParameter("a");
+		Reader reader = a == null ? request.getReader() : new StringReader(a);
+		doRequests(request, response, reader);
 	}
 	
-	static DocumentBuilderFactory domFact = DocumentBuilderFactory.newInstance();
-	public static Document newDocument(InputStream in) throws Exception {
-		return domFact.newDocumentBuilder().parse(in);
-	}	
-
-	public static Document newDocument(String in) throws Exception {
-		org.xml.sax.InputSource inputSource = new org.xml.sax.InputSource();
-		inputSource.setCharacterStream(new java.io.StringReader(in));
-		return domFact.newDocumentBuilder().parse(inputSource);
-	}
-
-	public static Document newDocument() throws Exception {
-		return domFact.newDocumentBuilder().newDocument();
-	}
-	public static Document newDocument(Reader reader) throws Exception {
-		return domFact.newDocumentBuilder().parse(new InputSource(reader));
-	}	
+//	static DocumentBuilderFactory domFact = DocumentBuilderFactory.newInstance();
+//	public static Document newDocument(InputStream in) throws Exception {
+//		return domFact.newDocumentBuilder().parse(in);
+//	}	
+//
+//	public static Document newDocument(String in) throws Exception {
+//		org.xml.sax.InputSource inputSource = new org.xml.sax.InputSource();
+//		inputSource.setCharacterStream(new java.io.StringReader(in));
+//		return domFact.newDocumentBuilder().parse(inputSource);
+//	}
+//
+//	public static Document newDocument() throws Exception {
+//		return domFact.newDocumentBuilder().newDocument();
+//	}
+//	public static Document newDocument(Reader reader) throws Exception {
+//		return domFact.newDocumentBuilder().parse(new InputSource(reader));
+//	}	
 	
 	public static void sendFile(HttpServletResponse response, String fileName) throws IOException {
 		File file = new File(fileName);

@@ -84,6 +84,17 @@ public class StrictWeb {
 	}
 
     @MayBeExcluded
+    @NativeCode("{return str" +
+        ".replace(%toJSON%_slash, '\\\\')" +
+        ".replace(%toJSON%_quotRE, '\\\"');};" +
+        "var %toJSON%_slash=/\\//g;"+
+        "var %toJSON%_quotRE=/\\\"/g;")
+    public static String toJSON(String str) {
+        return null;
+    }
+    
+    
+    @MayBeExcluded
 	@NativeCode("{if(typeof val != 'number') return '';" +
 		"val = '00'+Math.round(val*100.0);" +
 		"return val.replace(/([0-9]{2})$/, '.$1').replace(/\\.0+$/, '').replace(/^0+([^\\.])/, '$1');}")

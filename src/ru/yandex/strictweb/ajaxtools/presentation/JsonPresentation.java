@@ -7,56 +7,49 @@ import java.util.regex.Pattern;
 public class JsonPresentation extends AbstractPresentation {
 	static Pattern hashKeyPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
 	
-    public JsonPresentation() {
-    }
-    
-    public JsonPresentation(Appendable writer) {
-        buf = writer;
-    }	
-	
 	public static String present(Object o) throws Exception {
 		JsonPresentation js = new JsonPresentation();
 		return js.toString(o);
 	}
 	
 	public String toString(String rootKey, Object o) throws Exception {
-	    boolean returnStr = buf == null;
-	    if(buf == null) buf = new StringBuilder();
+	    boolean returnStr = out == null;
+	    if(out == null) out = new StringBuilder();
 
-	    if(rootKey != null) buf.append('{');
+	    if(rootKey != null) out.append('{');
 	    presentOne(rootKey, o, false);
-	    if(rootKey != null) buf.append('}');
+	    if(rootKey != null) out.append('}');
 
-	    return returnStr ? buf.toString() : null;
+	    return returnStr ? out.toString() : null;
 	}
 	
 	@Override
 	boolean hashBegin(String key, Object x) throws IOException {
-		if(key == null) buf.append("{");
+		if(key == null) out.append("{");
 		else safeKey(key).append("{");
 		return true;
 	}
 
 	@Override
     void hashEnd(String key, Object x) throws IOException {
-        buf.append("}");
+        out.append("}");
     }
 
 	@Override
     boolean listBegin(String key, Object x) throws IOException {
-        if(key == null) buf.append("[");
+        if(key == null) out.append("[");
         else safeKey(key).append("[");
         return true;
     }
 
 	@Override
     void listEnd(String key) throws IOException {
-        buf.append("]");
+        out.append("]");
     }
 
 	@Override
     void addSeparator() throws IOException {
-        buf.append(',');
+        out.append(',');
     }
 
 	@Override
@@ -70,13 +63,13 @@ public class JsonPresentation extends AbstractPresentation {
 	
 	@Override
     void presentNull(String key, boolean forceItem) throws IOException {
-        if(key == null) buf.append("null");
+        if(key == null) out.append("null");
         else safeKey(key).append("null");       
     }
 
 	@Override
     void presentNumber(String key, String val, boolean forceItem) throws IOException {
-        if(key == null) buf.append(val);
+        if(key == null) out.append(val);
         else safeKey(key).append(val);
     }
 
@@ -99,10 +92,10 @@ public class JsonPresentation extends AbstractPresentation {
 	}
 	
 	public Appendable safe(String s) throws IOException {
-		return staticSafe(buf, s);
+		return staticSafe(out, s);
 	}
 	
 	public Appendable safeKey(String key) throws IOException {
-	    return staticSafeKey(buf, key);
+	    return staticSafeKey(out, key);
 	}
 }
