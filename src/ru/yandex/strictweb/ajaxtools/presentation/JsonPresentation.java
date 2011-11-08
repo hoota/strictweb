@@ -12,15 +12,11 @@ public class JsonPresentation extends AbstractPresentation {
 		return js.toString(o);
 	}
 	
-	public String toString(String rootKey, Object o) throws Exception {
-	    boolean returnStr = out == null;
-	    if(out == null) out = new StringBuilder();
-
+	@Override
+	public void present(Appendable out, String rootKey, Object o) throws Exception {
 	    if(rootKey != null) out.append('{');
-	    presentOne(rootKey, o, false);
+	    super.present(out, rootKey, o);
 	    if(rootKey != null) out.append('}');
-
-	    return returnStr ? out.toString() : null;
 	}
 	
 	@Override
