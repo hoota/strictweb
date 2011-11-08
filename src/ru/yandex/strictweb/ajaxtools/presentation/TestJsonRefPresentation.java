@@ -22,6 +22,8 @@ public class TestJsonRefPresentation {
 		
 		a.add(m);
 		
+		a.add(new LinkedHashMap());
+		
 		String json = new JsonRefPresentation().toString(a);
 		System.out.println(json);
 	}

@@ -99,11 +99,11 @@ public class JsonRefPresentation implements Presentation {
 			
 			numberFormat = AbstractPresentation.numberFormats[prop.fractionDigits];
 			
-			first |= presentOne(
+			if(presentOne(
 				prop.getName(), 
 				prop.getObject(o),
 				-1
-			);
+			)) first = false;
 			dateFormat = dFormat;
 		}
 		return first;
