@@ -99,13 +99,12 @@ public class JsonRefPresentation implements Presentation {
 			
 			numberFormat = AbstractPresentation.numberFormats[prop.fractionDigits];
 			
-			presentOne(
+			first |= presentOne(
 				prop.getName(), 
 				prop.getObject(o),
 				-1
 			);
 			dateFormat = dFormat;
-			first = false;
 		}
 		return first;
 	}
@@ -150,12 +149,14 @@ public class JsonRefPresentation implements Presentation {
 		return false;
 	}
 
-	void presentOne(String key, Object o, int arrayIndex) throws Exception {
+	// добавил ли что-то в основной out ?
+	boolean presentOne(String key, Object o, int arrayIndex) throws Exception {
 //		System.out.println(key + " :: " + o);
 		boolean first = true;
 		
-		if(presentSimpleOne(key, o)) return;
-		if(objectExists(key, o, arrayIndex)) return;
+		if(presentSimpleOne(key, o)) return true;
+		int objectExists = objectExists(key, o, arrayIndex);
+		if(objectExists != 0) return objectExists > 1;
 		
 		if(o instanceof Object[]) {
 			objectBegin(key, o, '[');
@@ -189,8 +190,7 @@ public class JsonRefPresentation implements Presentation {
 				Map.Entry e = i.next();
 				if(!first) addSeparator();
 				Object a = e.getKey();
-                presentOne(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), e.getValue(), -1);
-				first = false;
+				first |= presentOne(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), e.getValue(), -1);
 			}
 			objectEnd(key, '}');
 		} else if(o.getClass().isArray()) {
@@ -210,18 +210,20 @@ public class JsonRefPresentation implements Presentation {
             objectEnd(key, '}');
         } else {
 			presentString(key, o.toString());
-		}				
+		}	
+		
+		return true;
 	}
 
-	private boolean objectExists(String key, Object o, int arrayIndex) throws IOException {
+	private int objectExists(String key, Object o, int arrayIndex) throws IOException {
 		Integer n = references.get(o);
-		
 		if(n!=null) {
+			int res = 1;
 			if(key != null) {
 				if(currentIndex < n) {
 					JsonPresentation.staticSafeKey(out, key);
 					objectName(out, n);
-					return true;
+					return 2;
 				}
 				
 				objectName(assign, currentIndex);
@@ -233,10 +235,11 @@ public class JsonRefPresentation implements Presentation {
 			} else {
 				if(currentIndex < n) {
 					objectName(out, n);
-					return true;
+					return 2;
 				}
 
 				out.append("null");
+				res = 2;
 				objectName(assign, currentIndex);
 				assign.append("[").append(arrayIndex).append("]");
 			}
@@ -246,11 +249,11 @@ public class JsonRefPresentation implements Presentation {
 			assign.append(";");
 
 //			if(out.length() > 0 && out.charAt(out.length()-1)==',') out.setLength(out.length() - 1);
-			return true;
+			return res;
 		}
 
 		
-		return false;
+		return 0;
 	}
 
 	void presentString(String key, String val) throws IOException {

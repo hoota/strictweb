@@ -60,11 +60,11 @@ public abstract class AbstractPresentation implements Presentation {
         presentOne(rootKey, o, false);		
 	}
 	
-    public String toString(Object o) throws Exception {
+    public final String toString(Object o) throws Exception {
         return toString(null, o);
     }
     
-    public String toString(String rootKey, Object o) throws Exception {
+    public final String toString(String rootKey, Object o) throws Exception {
     	StringBuilder buf = new StringBuilder();
     	present(buf, rootKey, o);
     	return buf.toString();
