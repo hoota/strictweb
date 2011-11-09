@@ -71,34 +71,35 @@ public class StrictWeb {
 	
     @MayBeExcluded
 	@NativeCode("{return str" +
-	    ".replace(%toHTML%_ampRE, '&amp;')" +
-	    ".replace(%toHTML%_ltRE, '&lt;')" +
-		".replace(%toHTML%_gtRE, '&gt;')" +
-		".replace(%toHTML%_quotRE, '&quot;');};" +
-		"var %toHTML%_ampRE=/&/g;"+
-		"var %toHTML%_ltRE=/</g;" +
-		"var %toHTML%_gtRE=/>/g;" +
-		"var %toHTML%_quotRE=/\\\"/g;")
+	    ".replace(%toHTML_ampRE%, '&amp;')" +
+	    ".replace(%toHTML_ltRE%, '&lt;')" +
+		".replace(%toHTML_gtRE%, '&gt;')" +
+		".replace(%toHTML_quotRE%, '&quot;');};" +
+		"var %toHTML_ampRE%=/&/g;"+
+		"var %toHTML_ltRE%=/</g;" +
+		"var %toHTML_gtRE%=/>/g;" +
+		"var %toHTML_quotRE%=/\\\"/g;")
 	public static String toHTML(String str) {
 		return null;
 	}
 
     @MayBeExcluded
     @NativeCode("{return str" +
-        ".replace(%toJSON%_slash, '\\\\')" +
-        ".replace(%toJSON%_quotRE, '\\\"');};" +
-        "var %toJSON%_slash=/\\//g;"+
-        "var %toJSON%_quotRE=/\\\"/g;")
+        ".replace(%toJSON_slash%, '\\\\\\\\')" +
+        ".replace(%toJSON_quotRE%, '\\\\\"');};" +
+        "var %toJSON_slash%=/\\\\/g;"+
+        "var %toJSON_quotRE%=/\\\"/g;")
     public static String toJSON(String str) {
         return null;
     }
     
     
     @MayBeExcluded
-	@NativeCode("{if(typeof val != 'number') return '';" +
-		"val = '00'+Math.round(val*100.0);" +
-		"return val.replace(/([0-9]{2})$/, '.$1').replace(/\\.0+$/, '').replace(/^0+([^\\.])/, '$1');}")
-	public static String round2(double val) {
+	@NativeCode(
+	    "{if(typeof val != 'number') return '';" +
+        "return val.toFixed(2).replace(%round2_regexp%, '$&'+sep);};" +
+		"var %round2_regexp%=/\\d{1,3}(?=(\\d{3})+(?!\\d))/g;")
+	public static String round2(double val, String sep) {
 		return null;
 	}
 	

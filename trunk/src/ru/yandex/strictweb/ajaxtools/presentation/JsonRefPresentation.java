@@ -50,7 +50,7 @@ public class JsonRefPresentation implements Presentation {
         
         assign = new StringBuilder();
         
-        presentOne(rootKey, o, -1);
+        presentOne(rootKey, o, -1, false);
         
         out.append(";\n").append(assign);
 	}
@@ -90,7 +90,6 @@ public class JsonRefPresentation implements Presentation {
 		List<Property> properties = ClassMethodsInfo.getPresentableProperties(o.getClass());
 		
 		for(Property prop : properties) {
-			if(!first) addSeparator();
 			DateTimeFormat dFormat = dateFormat;
 			
 			if(prop.dateFormat != DateTimeFormat.UNDEF) {
@@ -102,46 +101,47 @@ public class JsonRefPresentation implements Presentation {
 			if(presentOne(
 				prop.getName(), 
 				prop.getObject(o),
-				-1
+				-1,
+				!first
 			)) first = false;
 			dateFormat = dFormat;
 		}
 		return first;
 	}
 	
-	boolean presentSimpleOne(String key, Object o) throws IOException {
+	boolean presentSimpleOne(String key, Object o, boolean addSeparator) throws IOException {
 		if(o == null) {
-			presentNull(key);
+			presentNull(key, addSeparator);
 			return true;
 		} else if(o instanceof Number) {
 		    if(o instanceof Double) {
                 Double d = (Double)o;
-                if(d.isNaN()) {presentNumber(key, "NaN");return true;}
-                if(d.isInfinite()) {presentNumber(key, (d<0?"-":"") + "Infinite"); return true;}
+                if(d.isNaN()) {presentNumber(key, "NaN", addSeparator);return true;}
+                if(d.isInfinite()) {presentNumber(key, (d<0?"-":"") + "Infinite", addSeparator); return true;}
             } else if(o instanceof Float) {
                 Float f = (Float)o;
-                if(f.isNaN()) {presentNumber(key, "NaN");return true;}
-                if(f.isInfinite()) {presentNumber(key, (f<0?"-":"") + "Infinite"); return true;}
+                if(f.isNaN()) {presentNumber(key, "NaN", addSeparator);return true;}
+                if(f.isInfinite()) {presentNumber(key, (f<0?"-":"") + "Infinite", addSeparator); return true;}
             }
 	        
-			presentNumber(key, numberFormat.format(o));
+			presentNumber(key, numberFormat.format(o), addSeparator);
 			return true;
 		} else if(o instanceof String) {
-			presentString(key, o.toString());
+			presentString(key, o.toString(), addSeparator);
 			return true;
 		} else if(o instanceof java.util.Date) {
 			String val = String.format(dateFormat.format, o);
-			if(dateFormat.quote) presentString(key, val);
-			else presentNumber(key, val);
+			if(dateFormat.quote) presentString(key, val, addSeparator);
+			else presentNumber(key, val, addSeparator);
 			return true;
 		} else if(o instanceof Boolean) {
-			presentNumber(key, ((Boolean)o).booleanValue() ? "1" : "0");
+			presentNumber(key, ((Boolean)o).booleanValue() ? "1" : "0", addSeparator);
 			return true;
 		} else if(o instanceof Enum) {
 			if(enumsAsClasses) {
-				presentNumber(key, o.getClass().getSimpleName()+"."+((Enum)o).name());
+				presentNumber(key, o.getClass().getSimpleName()+"."+((Enum)o).name(), addSeparator);
 			} else {
-				presentString(key, ((Enum)o).name());				
+				presentString(key, ((Enum)o).name(), addSeparator);				
 			}
 			return true;
 		}	
@@ -150,77 +150,79 @@ public class JsonRefPresentation implements Presentation {
 	}
 
 	// добавил ли что-то в основной out ?
-	boolean presentOne(String key, Object o, int arrayIndex) throws Exception {
+	boolean presentOne(String key, Object o, int arrayIndex, boolean addSeparator) throws Exception {
 //		System.out.println(key + " :: " + o);
 		boolean first = true;
 		
-		if(presentSimpleOne(key, o)) return true;
-		int objectExists = objectExists(key, o, arrayIndex);
+		if(presentSimpleOne(key, o, addSeparator)) return true;
+		int objectExists = objectExists(key, o, arrayIndex, addSeparator);
 		if(objectExists != 0) return objectExists > 1;
 		
 		if(o instanceof Object[]) {
+			if(addSeparator) out.append(',');
 			objectBegin(key, o, '[');
 			int ai = 0;
 			for(Object a : (Object[])o) {
-				if(!first) addSeparator();
-				presentOne(null, a, ai++);
+				presentOne(null, a, ai++, !first);
 				first = false;
 			}
 			objectEnd(key, ']');
 		} else if(o instanceof Set) {
+			if(addSeparator) out.append(',');
 			objectBegin(key, o, '{');
 			for(Object a : (Set)o) {
-				if(!first) addSeparator();				
-				presentNumber(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), "1");
+				presentNumber(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), "1", !first);
 				first = false;
 			}
 			objectEnd(key, '}');
 		} else if(o instanceof Iterable) {
+			if(addSeparator) out.append(',');
 			objectBegin(key, o, '[');
 			int ai = 0;
 			for(Object a : (Iterable)o) {
-				if(!first) addSeparator();
-				presentOne(null, a, ai++);
+				presentOne(null, a, ai++, !first);
 				first = false;
 			}
 			objectEnd(key, ']');
 		} else if(o instanceof Map) {
+			if(addSeparator) out.append(',');
 			objectBegin(key, o, '{');
 			for(Iterator<Map.Entry> i = ((Map)o).entrySet().iterator(); i.hasNext();) {
 				Map.Entry e = i.next();
-				if(!first) addSeparator();
 				Object a = e.getKey();
-				first |= presentOne(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), e.getValue(), -1);
+				if(presentOne(a.getClass().isEnum() ? ((Enum)a).name() : a.toString(), e.getValue(), -1, !first)) first = false;
 			}
 			objectEnd(key, '}');
 		} else if(o.getClass().isArray()) {
 			// TODO: сделать вынос в переменную
 			if(o instanceof int[]) {
-				presentNumber(key, Arrays.toString((int[])o));
+				presentNumber(key, Arrays.toString((int[])o), addSeparator);
 			} else if(o instanceof double[]) {
-				presentNumber(key, Arrays.toString((double[])o));
+				presentNumber(key, Arrays.toString((double[])o), addSeparator);
 			} else if(o instanceof long[]) {
-				presentNumber(key, Arrays.toString((long[])o));
+				presentNumber(key, Arrays.toString((long[])o), addSeparator);
 			} else {
 				throw new RuntimeException("Arrays of this simple type are not yet implemented :(");
 			}
 		} else if(ClassMethodsInfo.isPresentableOrEntity(o.getClass())) {
+			if(addSeparator) out.append(',');
             objectBegin(key, o, '{');
             presentEntity(o, true);
             objectEnd(key, '}');
         } else {
-			presentString(key, o.toString());
+			presentString(key, o.toString(), addSeparator);
 		}	
 		
 		return true;
 	}
 
-	private int objectExists(String key, Object o, int arrayIndex) throws IOException {
+	private int objectExists(String key, Object o, int arrayIndex, boolean addSeparator) throws IOException {
 		Integer n = references.get(o);
 		if(n!=null) {
 			int res = 1;
 			if(key != null) {
 				if(currentIndex < n) {
+					if(addSeparator) out.append(',');
 					JsonPresentation.staticSafeKey(out, key);
 					objectName(out, n);
 					return 2;
@@ -233,6 +235,7 @@ public class JsonRefPresentation implements Presentation {
 					JsonPresentation.staticSafe(assign.append("['"), key).append("']");
 				}
 			} else {
+				if(addSeparator) out.append(',');
 				if(currentIndex < n) {
 					objectName(out, n);
 					return 2;
@@ -248,7 +251,6 @@ public class JsonRefPresentation implements Presentation {
 			objectName(assign, n);
 			assign.append(";");
 
-//			if(out.length() > 0 && out.charAt(out.length()-1)==',') out.setLength(out.length() - 1);
 			return res;
 		}
 
@@ -256,27 +258,22 @@ public class JsonRefPresentation implements Presentation {
 		return 0;
 	}
 
-	void presentString(String key, String val) throws IOException {
+	void presentString(String key, String val, boolean addSeparator) throws IOException {
+		if(addSeparator) out.append(',');
 		if(key == null) JsonPresentation.staticSafe(out, val);
 		else JsonPresentation.staticSafe(JsonPresentation.staticSafeKey(out, key), val);
 	}
 	
-	void presentNull(String key) throws IOException {
+	void presentNull(String key, boolean addSeparator) throws IOException {
+		if(addSeparator) out.append(',');
 		if(key == null) out.append("null");
 		else JsonPresentation.staticSafeKey(out, key).append("null");		
 	}
 
-	void presentNumber(String key, String val) throws IOException {
+	void presentNumber(String key, String val, boolean addSeparator) throws IOException {
+		if(addSeparator) out.append(',');
 		if(key == null) out.append(val);
 		else JsonPresentation.staticSafeKey(out, key).append(val);
-	}
-	
-	void addSeparator() throws IOException {
-//		if(out.length() > 0) {
-//			char c = out.charAt(out.length() - 1);
-//			if(c==',' || c=='[' || c=='{') return;
-//		}
-		out.append(',');
 	}
 	
 	public boolean isEnumsAsClasses() {

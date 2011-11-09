@@ -37,6 +37,15 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
+import ru.yandex.strictweb.ajaxtools.annotation.AjaxTransient;
+import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
+import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo;
+import ru.yandex.strictweb.scriptjava.base.ExtendsNative;
+import ru.yandex.strictweb.scriptjava.base.Native;
+import ru.yandex.strictweb.scriptjava.base.NativeCode;
+import ru.yandex.strictweb.scriptjava.base.StrictWeb;
+import ru.yandex.strictweb.scriptjava.plugins.EntityCompilerPlugin;
+
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.code.Flags;
@@ -55,15 +64,6 @@ import com.sun.tools.javac.tree.JCTree.JCModifiers;
 import com.sun.tools.javac.tree.JCTree.JCNewClass;
 import com.sun.tools.javac.tree.JCTree.JCTypeParameter;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
-
-import ru.yandex.strictweb.ajaxtools.annotation.AjaxTransient;
-import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
-import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo;
-import ru.yandex.strictweb.scriptjava.base.ExtendsNative;
-import ru.yandex.strictweb.scriptjava.base.Native;
-import ru.yandex.strictweb.scriptjava.base.NativeCode;
-import ru.yandex.strictweb.scriptjava.base.StrictWeb;
-import ru.yandex.strictweb.scriptjava.plugins.EntityCompilerPlugin;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_5)
 @SupportedAnnotationTypes("*")
@@ -1450,7 +1450,7 @@ public class Parser implements CompilerPlugin {
 		return true;
 	}
 
-	Pattern toObfuscatePat = Pattern.compile("\\%([\\$a-zA-Z]+)\\%");
+	Pattern toObfuscatePat = Pattern.compile("\\%([\\$a-zA-Z_][\\$a-zA-Z_0-9]*)\\%");
 	
 	public void setParser(Parser parser) {
 	}
