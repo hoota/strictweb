@@ -30,7 +30,7 @@ abstract public class Node {
 	public String vAlign;
 	public String src;
 	public String title;
-	public String field;
+	public Object field;
 	public InputValidator validator;
 	public Node parentNode;
 	public Node nextSibling, previousSibling;

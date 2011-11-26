@@ -326,7 +326,7 @@ public abstract class DOMBuilder<N extends Node, C extends Node, S extends DOMBu
 	}
 
     @MayBeExcluded
-	public S field(String f) {
+	public S field(Object f) {
 		node.field = f;
 		return (S)this;
 	}
