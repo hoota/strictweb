@@ -373,13 +373,13 @@ public class Ajax {
                 });
                 
                 if(json.length()>0) json += ",";
-                if(asArray) throw new RuntimeException("Form returned as array, not at map");
+                if(asArray) nativeJsThrow("Form returned as array, not as map 1");
                 json += objectToJson(el.field) + ":" + arrayToJson((Object[])(Object)val);
             } else {
                 String childJson = formToJson(el);
                 if(childJson != null && childJson.length() > 0) {
                     if(childJson.charAt(0) == '{') asArray = true;
-                    else if(asArray) throw new RuntimeException("Form returned as array, not at map");
+                    else if(asArray) nativeJsThrow("Form returned as array, not as map 2");
 
                     if(json.length()>0) json += ",";
                     json += childJson;
@@ -387,14 +387,16 @@ public class Ajax {
             }
         }
         
+        
         if(start.field != null) {
+            String bra = asArray ? "[" : "{";
+            String ket = asArray ? "]" : "}";
+            
             if(StrictWeb.jsTypeOf(start.field) == "string") {
-                return objectToJson(start.field) + ":{" + json + "}";
-            } else return "{" + json + "}";
+                return objectToJson(start.field) + ":" + bra + json + ket;
+            } else return bra + json + ket;
         }
-        
-        if(asArray) return "[" + json + "]";
-        
+                
         return json;
     }
     
