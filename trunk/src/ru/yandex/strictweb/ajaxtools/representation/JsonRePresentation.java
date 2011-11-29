@@ -8,11 +8,13 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -201,7 +203,7 @@ public class JsonRePresentation {
 		}
 		
 		Collection<Object> col = isList ? new ArrayList<Object>() : 
-			(HashSet.class.isAssignableFrom(clazz) ? new HashSet<Object>() : new TreeSet<Object>());
+			(SortedSet.class.isAssignableFrom(clazz) ? new TreeSet<Object>(): new LinkedHashSet<Object>());
 		
 		ParameterizedType pType = (ParameterizedType) type;
 		Type valType = pType.getActualTypeArguments()[0];
@@ -242,7 +244,7 @@ public class JsonRePresentation {
 	private Map parseMap(Class clazz, Type type) throws IOException, ParseException, Exception {
 		if(lexer.type != Yytoken.TYPE_LEFT_BRACE) throw new RePresentationException("Bad json: map is not map");
 		
-		Map map = HashMap.class.isAssignableFrom(clazz) ? new HashMap() : new TreeMap();
+		final Map map = SortedMap.class.isAssignableFrom(clazz) ? new TreeMap() : new LinkedHashMap();
 		
 		ParameterizedType pType = (ParameterizedType) type;
 		Type keyType = pType.getActualTypeArguments()[0];
