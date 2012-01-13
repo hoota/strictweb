@@ -143,22 +143,21 @@ public class JsonRePresentation {
 			lexer.yylex();
 			if(lexer.type == Yytoken.TYPE_COMMA) continue;
 			if(lexer.type == Yytoken.TYPE_RIGHT_BRACE) break;
-			if(lexer.type != Yytoken.TYPE_VALUE) throw new RePresentationException("Bad json: map key expected");
+			if(lexer.type != Yytoken.TYPE_VALUE) throw new RePresentationException("Bad json: map key expected " + lexer.type);
 			String mName = getObjectSimple(String.class).toString();
-			
+            lexer.yylex();
+            if(lexer.type != Yytoken.TYPE_COLON) throw new RePresentationException("Bad json: key:value separator expected");
+
 			ClassMethodsInfo.Property mInfo = ClassMethodsInfo.getProperty(clazz, mName);
 			if(mInfo == null) {
-				if(skipIncoming) continue;
+				if(skipIncoming) {lexer.yylex();continue;}
 				throw new RePresentationException("Unknown property `"+mName+"` in class " + clazz);
 			}
 			if(!mInfo.canSet()) {
-				if(skipIncoming) continue;
+                if(skipIncoming) {lexer.yylex();continue;}
 				throw new RePresentationException("Unknown setter property `"+mName+"` in class " + clazz);
 			}
-			
-			lexer.yylex();
-			if(lexer.type != Yytoken.TYPE_COLON) throw new RePresentationException("Bad json: key:value separator expected");
-			
+
 			Object value = getObject(mInfo.getReturnType(), mInfo.getGenericReturnType());
 			propertiesAndValues.add(mInfo);
 			propertiesAndValues.add(value);
