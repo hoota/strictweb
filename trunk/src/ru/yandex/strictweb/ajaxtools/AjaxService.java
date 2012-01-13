@@ -272,7 +272,7 @@ public class AjaxService extends HttpServlet {
             String ref = request.getHeader("Referer");
             if(ref == null) throw new RuntimeException("Invalid referer");
             
-            ref = ref.replaceFirst("http://", "").replaceFirst("/.*$", "");
+            ref = ref.replaceFirst("http://", "").replaceFirst("[\\:/].*$", "");
             
             String host = request.getHeader("Host");
             if(host == null) throw new RuntimeException("Invalid host");
