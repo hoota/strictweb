@@ -37,15 +37,6 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
-import ru.yandex.strictweb.ajaxtools.annotation.AjaxTransient;
-import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
-import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo;
-import ru.yandex.strictweb.scriptjava.base.ExtendsNative;
-import ru.yandex.strictweb.scriptjava.base.Native;
-import ru.yandex.strictweb.scriptjava.base.NativeCode;
-import ru.yandex.strictweb.scriptjava.base.StrictWeb;
-import ru.yandex.strictweb.scriptjava.plugins.EntityCompilerPlugin;
-
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.code.Flags;
@@ -64,6 +55,15 @@ import com.sun.tools.javac.tree.JCTree.JCModifiers;
 import com.sun.tools.javac.tree.JCTree.JCNewClass;
 import com.sun.tools.javac.tree.JCTree.JCTypeParameter;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
+
+import ru.yandex.strictweb.ajaxtools.annotation.AjaxTransient;
+import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
+import ru.yandex.strictweb.ajaxtools.presentation.ClassMethodsInfo;
+import ru.yandex.strictweb.scriptjava.base.ExtendsNative;
+import ru.yandex.strictweb.scriptjava.base.Native;
+import ru.yandex.strictweb.scriptjava.base.NativeCode;
+import ru.yandex.strictweb.scriptjava.base.StrictWeb;
+import ru.yandex.strictweb.scriptjava.plugins.EntityCompilerPlugin;
 
 @SupportedSourceVersion(SourceVersion.RELEASE_5)
 @SupportedAnnotationTypes("*")
@@ -668,49 +668,53 @@ public class Parser implements CompilerPlugin {
 			return null;
 		}
 
-		ParsedClass cl = new ParsedClass(claz.getSimpleName(), null);
-		addClassLabel(claz, EntityCompilerPlugin.LABEL);
-		
-		cl.canCreateNewInstance = false;
-		cl.skipInnerObfuscation = true;
-		classes.put(cl.name, cl);
-
-		for(Method m : claz.getMethods()) {
-		    if(ClassMethodsInfo.isSetter(m)) {
-	            ParsedMethod pm = new ParsedMethod(m.getName(), null, cl, VarType.VOID);
-                cl.methods.put(pm.name, pm);		        
-		    }
-		    
-		    if(ClassMethodsInfo.isGetter(m) 
-		        && !ClassMethodsInfo.excludedMethods.contains(m)
-		        && !m.isAnnotationPresent(AjaxTransient.class)
-		        && (!m.isAnnotationPresent(Transient.class) || m.isAnnotationPresent(Presentable.class))) {
-
-		        try {
-		            ParsedMethod pm = new ParsedMethod(m.getName(), null, cl, new VarType(m.getGenericReturnType()));
-		            cl.methods.put(pm.name, pm);
-		        }catch(Throwable th) {
-		            System.err.println("Warning: " + th.getMessage());
-		        }
-		    }
-		}
-
-		for(Field f : claz.getFields()) 
-			if(!f.isAnnotationPresent(AjaxTransient.class)
-				&& (!f.isAnnotationPresent(Transient.class) || f.isAnnotationPresent(Presentable.class))) {
-				
-			ParsedField pf = new ParsedField(f.getName(), VarType.STRING, cl);
-			pf.type = new VarType(f.getGenericType());
-			cl.fields.put(pf.name, pf);				
-			
-		}
-
-		printWarning(claz + " parsed as POJO bean");
-		
-		return cl;
+        return parseAsPOJOBean(claz);
 	}
 
-	private Class<?> findClassInImports(String typeName) {
+    public ParsedClass parseAsPOJOBean(Class<?> claz) {
+        ParsedClass cl = new ParsedClass(claz.getSimpleName(), null);
+        addClassLabel(claz, EntityCompilerPlugin.LABEL);
+
+        cl.canCreateNewInstance = false;
+        cl.skipInnerObfuscation = true;
+        classes.put(cl.name, cl);
+
+        for(Method m : claz.getMethods()) {
+            if(ClassMethodsInfo.isSetter(m)) {
+                ParsedMethod pm = new ParsedMethod(m.getName(), null, cl, VarType.VOID);
+                cl.methods.put(pm.name, pm);
+            }
+
+            if(ClassMethodsInfo.isGetter(m)
+                && !ClassMethodsInfo.excludedMethods.contains(m)
+                && !m.isAnnotationPresent(AjaxTransient.class)
+                && (!m.isAnnotationPresent(Transient.class) || m.isAnnotationPresent(Presentable.class))) {
+
+                try {
+                    ParsedMethod pm = new ParsedMethod(m.getName(), null, cl, new VarType(m.getGenericReturnType()));
+                    cl.methods.put(pm.name, pm);
+                }catch(Throwable th) {
+                    System.err.println("Warning: " + th.getMessage());
+                }
+            }
+        }
+
+        for(Field f : claz.getFields())
+            if(!f.isAnnotationPresent(AjaxTransient.class)
+                && (!f.isAnnotationPresent(Transient.class) || f.isAnnotationPresent(Presentable.class))) {
+
+            ParsedField pf = new ParsedField(f.getName(), VarType.STRING, cl);
+            pf.type = new VarType(f.getGenericType());
+            cl.fields.put(pf.name, pf);
+
+        }
+
+        printWarning(claz + " parsed as POJO bean");
+
+        return cl;
+    }
+
+    private Class<?> findClassInImports(String typeName) {
 		Class<?> cl = getClassSafe("java.lang." + typeName);
 		if(cl != null) return cl;
 		
