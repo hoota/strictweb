@@ -26,8 +26,8 @@ import ru.yandex.strictweb.ajaxtools.annotation.Presentable;
 
 public class ClassMethodsInfo {
 	public final static Set<Method> excludedMethods = new HashSet<Method>();
-	
-	static {
+
+    static {
 		fillExcludedMethods();
 	}
 	
@@ -340,7 +340,11 @@ public class ClassMethodsInfo {
 		return b.booleanValue();
 	}
 
-	public static boolean isPojoBean(Class<?> cls) {
+    public static void markAsPojoBean(Class<?> cls) {
+        presentableClasses.put(cls, true);
+    }
+
+    public static boolean isPojoBean(Class<?> cls) {
 		int publicProp = 0;
 		if(cls.isArray()) return false;
 		

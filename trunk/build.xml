@@ -2,5 +2,6 @@
 <project name="Scrict-Web" default="make-jar" basedir=".">
     <target name="make-jar">
     	<jar destfile="strict-web.jar" basedir="src"></jar>
+	<jar destfile="strict-web.jar" update="true" basedir="bin"></jar>
 	</target>
 </project>

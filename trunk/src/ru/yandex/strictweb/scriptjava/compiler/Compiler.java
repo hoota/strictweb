@@ -220,4 +220,11 @@ public class Compiler {
 		parser.obfuscate = obfuscate;
 		return this;
 	}
+
+    public Compiler parseClassAsPOJOBean(Class<?> clas) {
+        ParsedClass parsedClass = parser.parseAsPOJOBean(clas);
+        parser.classes.put(parsedClass.name, parsedClass);
+
+        return this;
+    }
 }
