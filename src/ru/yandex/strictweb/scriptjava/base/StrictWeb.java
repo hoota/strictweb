@@ -239,7 +239,7 @@ public class StrictWeb {
 	}
 	
     @MayBeExcluded
-    @NativeCode("{return o[property];}")
+    @NativeCode("{return o!=null?o[property]:null;}")
 	public static Object jsGetObjectProperty(Object o, String property) {
 	    return null;
 	}
@@ -251,7 +251,7 @@ public class StrictWeb {
     }
     
     @MayBeExcluded
-    @NativeCode("{delete o[property];}")
+    @NativeCode("{if(o!=null)delete o[property];}")
     public static void jsDelObjectProperty(Object o, Object property) {
     }
     
